@@ -5,6 +5,124 @@
   </head>
   <body>
     <script>
+class MainScene extends Phaser.Scene {
+
+  constructor(config) {
+    super(config)
+    this.speed = 100
+  }
+
+  preload() {
+    this.load.image('tiles', '/assets/tilemaps/tiles/catastrophi_tiles_16.png');
+    this.load.tilemapCSV('map', '/assets/tilemaps/csv/main2.csv');
+    this.load.spritesheet('player', 'assets/sprites/spaceman.png', { frameWidth: 16, frameHeight: 16 });
+  }
+
+  create() {
+    // When loading a CSV map, make sure to specify the tileWidth and tileHeight
+    this.map = this.make.tilemap({ key: 'map', tileWidth: 16, tileHeight: 16 });
+    var tileset = this.map.addTilesetImage('tiles');
+    this.layer = this.map.createStaticLayer(0, tileset, 0, 0);
+
+    //  This isn't totally accurate, but it'll do for now
+    this.map.setCollisionBetween(54, 83);
+
+    this.player = this.physics.add.sprite(48, 96, 'player', 1);
+
+    // Set up the player to collide with the tilemap layer. Alternatively, you can manually run
+    // collisions in update via: this.physics.world.collide(player, layer).
+    this.physics.add.collider(this.player, this.layer);
+
+    this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+    this.cameras.main.startFollow(this.player);
+
+    this.debugGraphics = this.add.graphics();
+
+    this.input.keyboard.on('keydown_C', function (event) {
+        this.showDebug = !this.showDebug;
+        this.drawDebug();
+    });
+    ['UP', 'DOWN', 'LEFT', 'RIGHT'].forEach(key => {
+      this.input.keyboard.on('keyup_'+key, e => { this.player.body.setVelocity(0) })
+    })
+
+    this.input.on('pointerdown', function (pointer) {
+        this.moveTo(pointer)
+    }, this);
+
+    this.cursors = this.input.keyboard.createCursorKeys();
+
+    this.helpText = this.add.text(16, 16, this.getHelpMessage(), {
+        fontSize: '18px',
+        fill: '#ffffff'
+    });
+    this.helpText.setScrollFactor(0);
+  }
+
+  update(time, delta) {
+
+      if (this.playerMoveTo && Phaser.Math.Fuzzy.Equal(this.playerMoveTo.x, this.player.body.gameObject.x, 1) && Phaser.Math.Fuzzy.Equal(this.playerMoveTo.y, this.player.body.gameObject.y, 1)) {
+        this.playerMoveTo = null
+        this.player.body.setVelocity(0)
+      }
+
+      // Horizontal movement
+      if (this.cursors.left.isDown)
+      {
+          this.player.body.setVelocityX(this.speed*-1);
+      }
+      else if (this.cursors.right.isDown)
+      {
+          this.player.body.setVelocityX(this.speed);
+      }
+
+      // Vertical movement
+      if (this.cursors.up.isDown)
+      {
+          this.player.body.setVelocityY(this.speed*-1);
+      }
+      else if (this.cursors.down.isDown)
+      {
+          this.player.body.setVelocityY(this.speed);
+      }
+
+  }
+
+  handle(p1, p2) {
+    console.debug(p1, p2)
+  }
+
+  drawDebug() {
+    this.debugGraphics.clear();
+
+    if (this.showDebug)
+    {
+        // Pass in null for any of the style options to disable drawing that component
+        this.map.renderDebug(debugGraphics, {
+            tileColor: null, // Non-colliding tiles
+            collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles
+            faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
+        });
+    }
+
+    helpText.setText(getHelpMessage());
+  }
+
+  moveTo(pointer) {
+    var worldPoint = pointer.positionToCamera(this.cameras.main);
+    var tile = this.map.getTileAtWorldXY(worldPoint.x, worldPoint.y)
+    this.playerMoveTo = {x: tile.getCenterX(), y: tile.getCenterY()}
+    this.physics.moveTo(this.player, this.playerMoveTo.x, this.playerMoveTo.y, this.speed)
+  }
+
+  getHelpMessage () {
+      return 'Arrow keys to move.' +
+          '\nPress "C" to toggle debug visuals: ' + (this.showDebug ? 'on' : 'off');
+  }
+
+
+}
+
 var config = {
     type: Phaser.AUTO,
     width: 800,
@@ -18,158 +136,33 @@ var config = {
             gravity: { y: 0 }
         }
     },
-    scene: {
-        preload: preload,
-        create: create,
-        update: update
-    }
+    scene: MainScene
 };
 
+
 var game = new Phaser.Game(config);
-var map;
-var cursors;
-var debugGraphics;
-var helpText;
-var player;
-var showDebug = false;
-
-function preload ()
-{
-    this.load.image('tiles', '/assets/tilemaps/tiles/catastrophi_tiles_16.png');
-    this.load.tilemapCSV('map', '/assets/tilemaps/csv/main2.csv');
-    this.load.spritesheet('player', 'assets/sprites/spaceman.png', { frameWidth: 16, frameHeight: 16 });
-}
-
-function create ()
-{
-    // When loading a CSV map, make sure to specify the tileWidth and tileHeight
-    map = this.make.tilemap({ key: 'map', tileWidth: 16, tileHeight: 16 });
-    var tileset = map.addTilesetImage('tiles');
-    var layer = map.createStaticLayer(0, tileset, 0, 0);
-
-    //  This isn't totally accurate, but it'll do for now
-    map.setCollisionBetween(54, 83);
-
-    this.anims.create({
-        key: 'left',
-        frames: this.anims.generateFrameNumbers('player', { start: 8, end: 9 }),
-        frameRate: 10,
-        repeat: -1
-    });
-    this.anims.create({
-        key: 'right',
-        frames: this.anims.generateFrameNumbers('player', { start: 1, end: 2 }),
-        frameRate: 10,
-        repeat: -1
-    });
-    this.anims.create({
-        key: 'up',
-        frames: this.anims.generateFrameNumbers('player', { start: 11, end: 13 }),
-        frameRate: 10,
-        repeat: -1
-    });
-    this.anims.create({
-        key: 'down',
-        frames: this.anims.generateFrameNumbers('player', { start: 4, end: 6 }),
-        frameRate: 10,
-        repeat: -1
-    });
-
-    player = this.physics.add.sprite(50, 100, 'player', 1);
-
-    // Set up the player to collide with the tilemap layer. Alternatively, you can manually run
-    // collisions in update via: this.physics.world.collide(player, layer).
-    this.physics.add.collider(player, layer);
-
-    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-    this.cameras.main.startFollow(player);
-
-    debugGraphics = this.add.graphics();
-
-    this.input.keyboard.on('keydown_C', function (event) {
-        showDebug = !showDebug;
-        drawDebug();
-    });
-
-    cursors = this.input.keyboard.createCursorKeys();
-
-    helpText = this.add.text(16, 16, getHelpMessage(), {
-        fontSize: '18px',
-        fill: '#ffffff'
-    });
-    helpText.setScrollFactor(0);
-}
-
-function update (time, delta)
-{
-    player.body.setVelocity(0);
-
-    // Horizontal movement
-    if (cursors.left.isDown)
-    {
-        player.body.setVelocityX(-500);
-    }
-    else if (cursors.right.isDown)
-    {
-        player.body.setVelocityX(500);
-    }
-
-    // Vertical movement
-    if (cursors.up.isDown)
-    {
-        player.body.setVelocityY(-500);
-    }
-    else if (cursors.down.isDown)
-    {
-        player.body.setVelocityY(500);
-    }
-
-    // Update the animation last and give left/right animations precedence over up/down animations
-    if (cursors.left.isDown)
-    {
-        player.anims.play('left', true);
-    }
-    else if (cursors.right.isDown)
-    {
-        player.anims.play('right', true);
-    }
-    else if (cursors.up.isDown)
-    {
-        player.anims.play('up', true);
-    }
-    else if (cursors.down.isDown)
-    {
-        player.anims.play('down', true);
-    }
-    else
-    {
-        player.anims.stop();
-    }
-}
-
-function drawDebug ()
-{
-    debugGraphics.clear();
-
-    if (showDebug)
-    {
-        // Pass in null for any of the style options to disable drawing that component
-        map.renderDebug(debugGraphics, {
-            tileColor: null, // Non-colliding tiles
-            collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles
-            faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
-        });
-    }
-
-    helpText.setText(getHelpMessage());
-}
-
-function getHelpMessage ()
-{
-    return 'Arrow keys to move.' +
-        '\nPress "C" to toggle debug visuals: ' + (showDebug ? 'on' : 'off');
-}
 
     </script>
   </body>
 </html>
+<!--
+
+var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-example', { preload: preload, create: create });
+function preload() {    game.load.image('arrow', 'assets/sprites/arrow.png');}
+var sprite;var tween;
+function create() {
+  sprite = game.add.sprite(32, 32, 'arrow');
+  sprite.anchor.setTo(0.5, 0.5);
+  game.input.onDown.add(moveSprite, this);
+}
+function moveSprite (pointer) {
+  if (tween && tween.isRunning)    {
+    tween.stop();
+  }
+  sprite.rotation = game.physics.angleToPointer(sprite, pointer);
+  //  300 = 300 pixels per second = the speed the sprite will move at, regardless of the distance it has to travel
+  var duration = (game.physics.distanceToPointer(sprite, pointer) / 300) * 1000;
+  tween = game.add.tween(sprite).to(
+    { x: pointer.x, y: pointer.y }, duration, Phaser.Easing.Linear.None, true
+  );
+} -->
