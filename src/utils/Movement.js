@@ -78,7 +78,7 @@ class Movement {
       targets: object,
       x: toTile.pixelX + object.body.offset.x,
       y: toTile.pixelY + object.body.offset.y,
-      // ease: 'Power1',
+      ease: 'Linear',
       duration: 250,
       onComplete: () => {
         this.moveToByPath.call(this, object, callback)
