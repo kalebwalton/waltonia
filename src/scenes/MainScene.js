@@ -1,24 +1,18 @@
-<html>
-  <head>
-    <title>Waltonia</title>
-    <script src="//cdn.jsdelivr.net/npm/phaser@3.1.0/dist/phaser.js"></script>
-  </head>
-  <body>
-    <script>
 class MainScene extends Phaser.Scene {
-
   constructor(config) {
-    super(config)
+    super({
+      key: 'MainScene'
+    })
     this.speed = 100
   }
 
-  preload() {
-    this.load.image('tiles', '/assets/tilemaps/tiles/catastrophi_tiles_16.png');
-    this.load.tilemapCSV('map', '/assets/tilemaps/csv/main2.csv');
-    this.load.spritesheet('player', 'assets/sprites/spaceman.png', { frameWidth: 16, frameHeight: 16 });
+  preload()
+  {
   }
 
-  create() {
+  create()
+  {
+    console.log("BOOTED");
     // When loading a CSV map, make sure to specify the tileWidth and tileHeight
     this.map = this.make.tilemap({ key: 'map', tileWidth: 16, tileHeight: 16 });
     var tileset = this.map.addTilesetImage('tiles');
@@ -43,7 +37,9 @@ class MainScene extends Phaser.Scene {
         this.drawDebug();
     });
     ['UP', 'DOWN', 'LEFT', 'RIGHT'].forEach(key => {
-      this.input.keyboard.on('keyup_'+key, e => { this.player.body.setVelocity(0) })
+      this.input.keyboard.on('keyup_'+key, e => {
+        this.player.body.setVelocity(0)
+      })
     })
 
     this.input.on('pointerdown', function (pointer) {
@@ -111,8 +107,10 @@ class MainScene extends Phaser.Scene {
   moveTo(pointer) {
     var worldPoint = pointer.positionToCamera(this.cameras.main);
     var tile = this.map.getTileAtWorldXY(worldPoint.x, worldPoint.y)
-    this.playerMoveTo = {x: tile.getCenterX(), y: tile.getCenterY()}
-    this.physics.moveTo(this.player, this.playerMoveTo.x, this.playerMoveTo.y, this.speed)
+    if (tile) {
+      this.playerMoveTo = {x: tile.getCenterX(), y: tile.getCenterY()}
+      this.physics.moveTo(this.player, this.playerMoveTo.x, this.playerMoveTo.y, this.speed)
+    }
   }
 
   getHelpMessage () {
@@ -123,46 +121,4 @@ class MainScene extends Phaser.Scene {
 
 }
 
-var config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    backgroundColor: '#2d2d2d',
-    parent: 'phaser-example',
-    pixelArt: true,
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 0 }
-        }
-    },
-    scene: MainScene
-};
-
-
-var game = new Phaser.Game(config);
-
-    </script>
-  </body>
-</html>
-<!--
-
-var game = new Phaser.Game(800, 600, Phaser.AUTO, 'phaser-example', { preload: preload, create: create });
-function preload() {    game.load.image('arrow', 'assets/sprites/arrow.png');}
-var sprite;var tween;
-function create() {
-  sprite = game.add.sprite(32, 32, 'arrow');
-  sprite.anchor.setTo(0.5, 0.5);
-  game.input.onDown.add(moveSprite, this);
-}
-function moveSprite (pointer) {
-  if (tween && tween.isRunning)    {
-    tween.stop();
-  }
-  sprite.rotation = game.physics.angleToPointer(sprite, pointer);
-  //  300 = 300 pixels per second = the speed the sprite will move at, regardless of the distance it has to travel
-  var duration = (game.physics.distanceToPointer(sprite, pointer) / 300) * 1000;
-  tween = game.add.tween(sprite).to(
-    { x: pointer.x, y: pointer.y }, duration, Phaser.Easing.Linear.None, true
-  );
-} -->
+export default MainScene
