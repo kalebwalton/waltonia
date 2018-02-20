@@ -59,10 +59,12 @@ class Movement {
     var fromTile = this.getTileAtObject(object);
     this.pathTo(fromTile, toTile, path => {
       // Remove the first entry off the path since it's the current tile
-      path.shift()
-      object.movementPath = path
-      if (!object.moving) {
-        this.moveToByPath(object, callback)
+      if (path) {
+        path.shift()
+        object.movementPath = path
+        if (!object.moving) {
+          this.moveToByPath(object, callback)
+        }
       }
     })
   }
