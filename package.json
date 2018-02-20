@@ -33,7 +33,6 @@
   },
   "dependencies": {
     "easystarjs": "^0.4.2",
-    "phaser": "^3.1.0",
-    "phaser-animated-tiles": "^1.0.0"
+    "phaser": "^3.1.0"
   }
 }
