@@ -1,5 +1,6 @@
 import Player from '../objects/Player'
 import Movement from '../utils/Movement'
+import io from 'socket.io-client';
 
 class MainScene extends Phaser.Scene {
   constructor(config) {
@@ -12,6 +13,34 @@ class MainScene extends Phaser.Scene {
   {
     this.movement = new Movement(this)
     this.speed = 100
+    this.players = {}
+    this.socket = io('http://127.0.0.1:3002', {forceNew: true});
+
+    var socket = this.socket
+
+    socket.on('playerMoveTo', (data) => {
+      console.log("playerMoveTo: ", data)
+      this.onPlayerMoveTo(data.x, data.y)
+    })
+    socket.on('otherPlayerMoveTo', (data) => {
+      console.log("otherPlayerMoveTo: ", data)
+      this.onOtherPlayerMoveTo(data.id, data.x, data.y)
+    })
+    socket.on('playerLeave', (data) => {
+      console.log("playerLeave: ", data)
+    })
+    socket.on('otherPlayerLeave', (data) => {
+      console.log("otherPlayerLeave: ", data)
+    })
+    socket.on('playerEnter', (data) => {
+      console.log("playerEnter: ", data)
+      this.onPlayerEnter(data)
+    })
+    socket.on('otherPlayerEnter', (data) => {
+      console.log("otherPlayerEnter: ", data)
+      this.onOtherPlayerEnter(data.player)
+    })
+
   }
 
   createMap() {
@@ -24,12 +53,49 @@ class MainScene extends Phaser.Scene {
   }
 
   initPlayer() {
-    this.player = new Player(this, 24, 24);
+    var url = new URL(window.location.href);
+    var playerId = url.searchParams.get("id");
+    this.socket.emit('playerEnter', playerId)
+    console.debug("INIT PLAYER")
+  }
+
+  onPlayerEnter(data) {
+    if (!this.player) {
+      var tile = this.movement.getTileAt(data.player.x, data.player.y)
+      this.player = new Player(data.player.id, this, tile.pixelX, tile.pixelY);
+      this.initCamera(this.player);
+      for (var id in data.players) {
+        if (id != data.player.id) {
+          this.onOtherPlayerEnter(data.players[id])
+        }
+      }
+    }
+  }
+
+  onOtherPlayerEnter(player) {
+    if (!this.players[player.id]) {
+      var tile = this.movement.getTileAt(player.x, player.y)
+      this.players[player.id] = new Player(player.id, this, tile.pixelX, tile.pixelY);
+    }
+  }
+
+  onPlayerMoveTo(x,y) {
+    if (this.player) {
+      var tile = this.movement.getTileAt(x,y)
+      this.player.moveTo(tile)
+    }
+  }
+
+  onOtherPlayerMoveTo(id, x, y) {
+    if (this.players[id]) {
+      var tile = this.movement.getTileAt(x,y)
+      this.players[id].moveTo(tile)
+    }
   }
 
   initCamera(player) {
     this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
-    this.cameras.main.startFollow(player, true);
+    this.cameras.main.startFollow(player, false);
   }
 
   initDebug() {
@@ -55,9 +121,8 @@ class MainScene extends Phaser.Scene {
     })
 
     this.input.on('pointerdown', function (pointer) {
-      var tileAtPointer = this.movement.getTileAtPointer(pointer)
-      console.debug("TILE: ", tileAtPointer)
-      this.player.moveTo(tileAtPointer)
+      var tile = this.movement.getTileAtPointer(pointer)
+      this.socket.emit('playerMoveTo', {x: tile.x, y: tile.y})
     }, this);
 
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -70,7 +135,6 @@ class MainScene extends Phaser.Scene {
 
     this.createMap();
     this.initPlayer();
-    this.initCamera(this.player);
     this.initDebug();
     this.initInput();
 

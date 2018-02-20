@@ -32,11 +32,19 @@ class Movement {
 
   getTileAtPointer(pointer) {
     var scenePoint = pointer.positionToCamera(this.scene.cameras.main);
-    return this.scene.map.getTileAtWorldXY(scenePoint.x, scenePoint.y);
+    return this.getTileAtWorldXY(scenePoint.x, scenePoint.y);
   }
 
   getTileAtObject(object) {
-    return this.scene.map.getTileAtWorldXY(object.body.x, object.body.y);
+    return this.getTileAtWorldXY(object.body.x, object.body.y);
+  }
+
+  getTileAtWorldXY(x, y) {
+    return this.scene.map.getTileAtWorldXY(x, y)
+  }
+
+  getTileAt(x, y) {
+    return this.scene.map.getTileAt(x, y, false, 'layer')
   }
 
   pathTo(fromTile, toTile, callback) {
@@ -72,7 +80,7 @@ class Movement {
       object.moving = true
     }
     var pathItem = object.movementPath.shift()
-    var toTile = this.scene.map.getTileAt(pathItem.x, pathItem.y, true, 'layer')
+    var toTile = this.getTileAt(pathItem.x, pathItem.y)
     // var fromTile = this.getTileAtObject(object)
     this.scene.tweens.add({
       targets: object,

@@ -5,7 +5,7 @@ import MainScene from './scenes/MainScene';
 class Waltonia extends Phaser.Game {
   constructor() {
     let config = {
-      type: Phaser.AUTO,
+      type: Phaser.CANVAS,
       parent: 'content',
       width: 800,
       height: 600,
@@ -22,6 +22,7 @@ class Waltonia extends Phaser.Game {
         MainScene
       ]
     }
+
     super(config)
   }
 }
