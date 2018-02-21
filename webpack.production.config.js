@@ -18,19 +18,19 @@ module.exports = {
   entry: {
     app: [
       'babel-polyfill',
-      path.resolve(__dirname, 'src/main.js')
+      path.resolve(__dirname, 'client/main.js')
     ],
     //vendor: ['pixi']
 
   },
   output: {
-    path: path.resolve(__dirname, 'build'),
+    path: path.resolve(__dirname, 'build-client'),
     publicPath: './',
     filename: 'js/bundle.js'
   },
   plugins: [
     definePlugin,
-    new CleanWebpackPlugin(['build']),
+    new CleanWebpackPlugin(['build-client']),
     new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
     /*new webpack.optimize.UglifyJsPlugin({
       drop_console: true,
@@ -41,8 +41,8 @@ module.exports = {
     }),*/
     new webpack.optimize.CommonsChunkPlugin({ name: 'vendor' /* chunkName= */, filename: 'js/vendor.bundle.js' /* filename= */ }),
     new HtmlWebpackPlugin({
-      filename: 'index.html', // path.resolve(__dirname, 'build', 'index.html'),
-      template: './src/index.html',
+      filename: 'index.html', // path.resolve(__dirname, 'build-client', 'index.html'),
+      template: './client/index.html',
       chunks: ['vendor', 'app'],
       chunksSortMode: 'manual',
       minify: {
@@ -63,7 +63,7 @@ module.exports = {
   ],
   module: {
     rules: [
-      { test: /\.js$/, use: ['babel-loader'], include: path.join(__dirname, 'src') },
+      { test: /\.js$/, use: ['babel-loader'], include: path.join(__dirname, 'client') },
       { test: /phaser-split\.js$/, use: 'raw-loader' },
       { test: [/\.vert$/, /\.frag$/], use: 'raw-loader' }
     ]

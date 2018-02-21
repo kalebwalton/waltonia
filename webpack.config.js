@@ -17,15 +17,15 @@ module.exports = {
     entry: {
         app: [
             'babel-polyfill',
-            path.resolve(__dirname, 'src/main.js')
+            path.resolve(__dirname, 'client/main.js')
         ],
         vendor: ['phaser']
     },
     devtool: 'cheap-source-map',
     output: {
         pathinfo: true,
-        path: path.resolve(__dirname, 'dist'),
-        publicPath: './dist/',
+        path: path.resolve(__dirname, 'dist-client'),
+        publicPath: './dist-client/',
         filename: 'bundle.js'
     },
     watch: true,
@@ -34,7 +34,7 @@ module.exports = {
         new webpack.optimize.CommonsChunkPlugin({ name: 'vendor'/* chunkName= */, filename: 'vendor.bundle.js'/* filename= */ }),
         new HtmlWebpackPlugin({
             filename: '../index.html',
-            template: './src/index.html',
+            template: './client/index.html',
             chunks: ['vendor', 'app'],
             chunksSortMode: 'manual',
             minify: {
@@ -59,7 +59,7 @@ module.exports = {
     ],
     module: {
         rules: [
-            { test: /\.js$/, use: ['babel-loader'], include: path.join(__dirname, 'src') },
+            { test: /\.js$/, use: ['babel-loader'], include: path.join(__dirname, 'client') },
             { test: /phaser-split\.js$/, use: ['expose-loader?Phaser'] },
             { test: [/\.vert$/, /\.frag$/], use: 'raw-loader' }
         ]

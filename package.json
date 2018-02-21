@@ -5,12 +5,15 @@
   "author": "niklas berg <me@niklasberg.se>",
   "main": "index.js",
   "scripts": {
+    "start": "npm run buildserver && node dist-server/main.js",
     "dev": "webpack",
+    "buildserver": "rimraf dist-server/ && babel server --out-dir dist-server/ && cp -pr assets dist-server",
     "deploy": "webpack --config webpack.production.config.js",
-    "test": "eslint ./src/**/**.js"
+    "test": "eslint ./src-client/**/**.js"
   },
   "license": "MIT",
   "devDependencies": {
+    "babel-cli": "^6.26.0",
     "babel-core": "^6.25.0",
     "babel-eslint": "^7.2.3",
     "babel-loader": "^7.1.1",
@@ -18,6 +21,8 @@
     "babel-preset-es2015": "^6.24.1",
     "browser-sync": "^2.18.13",
     "browser-sync-webpack-plugin": "^1.2.0",
+    "clean-webpack-plugin": "^0.1.17",
+    "copy-webpack-plugin": "^4.3.1",
     "eslint": "^4.3.0",
     "eslint-config-standard": "^10.2.1",
     "eslint-plugin-import": "^2.7.0",
@@ -25,15 +30,16 @@
     "eslint-plugin-promise": "^3.5.0",
     "eslint-plugin-standard": "^3.0.1",
     "expose-loader": "^0.7.3",
+    "html-webpack-plugin": "^2.30.1",
     "raw-loader": "^0.5.1",
-    "webpack": "^3.4.1",
-    "clean-webpack-plugin": "^0.1.17",
-    "copy-webpack-plugin": "^4.3.1",
-    "html-webpack-plugin": "^2.30.1"
+    "rimraf": "^2.6.2",
+    "webpack": "^3.4.1"
   },
   "dependencies": {
     "easystarjs": "^0.4.2",
+    "express": "^4.16.2",
     "phaser": "^3.1.0",
+    "socket.io": "^2.0.4",
     "socket.io-client": "^2.0.4",
     "underscore": "^1.8.3"
   }
