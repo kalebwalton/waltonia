@@ -1,4 +1,5 @@
 import 'phaser';
+import 'underscore';
 import BootScene from './scenes/BootScene';
 import MainScene from './scenes/MainScene';
 

@@ -81,7 +81,7 @@ class Movement {
     } else {
       object.moving = true
     }
-    var pathItem = object.movementPath.shift()
+    var pathItem = object.movementPath[0]
     var toTile = this.getTileAt(pathItem.x, pathItem.y)
     // var fromTile = this.getTileAtObject(object)
     this.scene.tweens.add({
@@ -91,6 +91,7 @@ class Movement {
       ease: 'None',
       duration: 50,
       onComplete: () => {
+        object.movementPath.shift()
         this.moveToByPath.call(this, object, callback)
       }
     });

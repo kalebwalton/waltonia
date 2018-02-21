@@ -4,9 +4,9 @@ class Player extends Phaser.GameObjects.Sprite {
     frame = frame ? frame : 1
     super(scene, x, y, texture, frame)
     scene.physics.world.enable(this);
+    this.body.offset = {x:8, y:8}
     scene.add.existing(this);
     this.id = id
-    this.body.offset = {x:this.body.halfWidth, y:this.body.halfHeight}
   }
 
   moveTo(toTile) {

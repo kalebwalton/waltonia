@@ -1,6 +1,8 @@
 import Player from '../objects/Player'
 import Movement from '../utils/Movement'
 import io from 'socket.io-client';
+import _ from 'underscore';
+
 
 class MainScene extends Phaser.Scene {
   constructor(config) {
@@ -92,7 +94,7 @@ class MainScene extends Phaser.Scene {
   onOtherPlayerEnter(player) {
     if (!this.players[player.id]) {
       var tile = this.movement.getTileAt(player.x, player.y)
-      this.players[player.id] = new Player(player.id, this, tile.pixelX, tile.pixelY);
+      this.players[player.id] = new Player(player.id, this, tile.pixelX+8, tile.pixelY+8);
     }
   }
 
@@ -137,12 +139,12 @@ class MainScene extends Phaser.Scene {
       })
     })
 
-    this.input.on('pointerdown', function (pointer) {
+    this.input.on('pointerdown', _.throttle(pointer => {
       var tile = this.movement.getTileAtPointer(pointer)
       if (tile) {
         this.socket.emit('playerMoveTo', {x: tile.x, y: tile.y})
       }
-    }, this);
+    }, 500), this);
 
     this.cursors = this.input.keyboard.createCursorKeys();
   }
