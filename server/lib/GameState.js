@@ -28,8 +28,8 @@ class GameState {
     });
   }
 
-  newPlayer() {
-    var id = this.generateId()
+  newPlayer(id) {
+    var id = id ? id : this.generateId()
     this.players[id] = new Player({
       id: id,
       connected: true,

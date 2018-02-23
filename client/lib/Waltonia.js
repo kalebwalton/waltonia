@@ -7,8 +7,8 @@ class Waltonia extends Phaser.Game {
     let config = {
       type: Phaser.CANVAS,
       parent: 'content',
-      width: 800,
-      height: 600,
+      width: 400,
+      height: 400,
       backgroundColor: '#2d2d2d',
       pixelArt: true,
       physics: {

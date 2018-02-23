@@ -113,7 +113,7 @@ class MainScene extends Phaser.Scene {
   }
 
   initCamera(player) {
-    this.cameras.main.setBounds(0, 0, this.map.widthInPixels, this.map.heightInPixels);
+//    this.cameras.main.zoom = 2;
     this.cameras.main.startFollow(player, false);
   }
 

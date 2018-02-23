@@ -67,7 +67,7 @@ class GameController {
       player = this.state.getPlayer(playerId)
     }
     if (!player) {
-      player = this.state.newPlayer()
+      player = this.state.newPlayer(playerId)
     }
     console.log("enter", playerId, player)
     this.setPlayer(socket, player)
@@ -107,10 +107,10 @@ class GameController {
     console.log("exit", player)
     if (player) {
       player.exit()
+      socket.broadcast.emit('otherExit', {
+        id: player.id
+      });
     }
-    socket.broadcast.emit('otherExit', {
-      id: player.id
-    });
   }
 
 
