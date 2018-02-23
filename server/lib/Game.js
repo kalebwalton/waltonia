@@ -1,10 +1,10 @@
 import GameState from './GameState'
-import GameIO from './GameIO'
+import GameController from './GameController'
 
 class Game {
   constructor(config) {
     this.state = new GameState()
-    this.io = new GameIO({io: config.io, state: this.state})
+    this.controller = new GameController({state: this.state})
   }
 
 }

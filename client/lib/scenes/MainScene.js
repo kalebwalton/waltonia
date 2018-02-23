@@ -18,33 +18,33 @@ class MainScene extends Phaser.Scene {
     this.players = {}
     this.url = new URL(window.location.href);
 
-    this.socket = io(this.url.protocol+"//"+this.url.hostname+":3002", {forceNew: true});
+    this.socket = io(this.url.protocol+"//"+this.url.hostname+":3002");
 
     var socket = this.socket
 
-    socket.on('playerMoveTo', (data) => {
-      console.log("playerMoveTo: ", data)
-      this.onPlayerMoveTo(data.x, data.y)
+    socket.on('moveTo', (data) => {
+      console.log("moveTo: ", data)
+      this.onMoveTo(data.x, data.y)
     })
-    socket.on('otherPlayerMoveTo', (data) => {
-      console.log("otherPlayerMoveTo: ", data)
-      this.onOtherPlayerMoveTo(data.id, data.x, data.y)
+    socket.on('otherMoveTo', (data) => {
+      console.log("otherMoveTo: ", data)
+      this.onOtherMoveTo(data.id, data.x, data.y)
     })
-    socket.on('playerDisconnect', () => {
-      console.log("playerDisconnect")
-      this.onPlayerDisconnect()
+    socket.on('exit', () => {
+      console.log("exit")
+      this.onExit()
     })
-    socket.on('otherPlayerDisconnect', (data) => {
-      console.log("otherPlayerDisconnect: ", data)
-      this.onOtherPlayerDisconnect(data)
+    socket.on('otherExit', (data) => {
+      console.log("otherExit: ", data)
+      this.onOtherExit(data)
     })
-    socket.on('playerConnect', (data) => {
-      console.log("playerConnect: ", data)
-      this.onPlayerConnect(data)
+    socket.on('enter', (data) => {
+      console.log("enter: ", data)
+      this.onEnter(data)
     })
-    socket.on('otherPlayerConnect', (data) => {
-      console.log("otherPlayerConnect: ", data)
-      this.onOtherPlayerConnect(data.player)
+    socket.on('otherEnter', (data) => {
+      console.log("otherEnter: ", data)
+      this.onOtherEnter(data.player)
     })
 
   }
@@ -60,17 +60,17 @@ class MainScene extends Phaser.Scene {
 
   initPlayer() {
     var playerId = this.url.searchParams.get("id");
-    this.socket.emit('playerConnect', playerId)
+    this.socket.emit('enter', playerId)
     console.debug("INIT PLAYER")
   }
 
-  onPlayerDisconnect() {
+  onDisconnect() {
     if (this.player) {
       this.player.destroy()
     }
   }
 
-  onOtherPlayerDisconnect(player) {
+  onOtherExit(player) {
     if (this.players[player.id]) {
       console.log("Destroying ", this.players[player.id])
       this.players[player.id].destroy()
@@ -78,34 +78,34 @@ class MainScene extends Phaser.Scene {
     }
   }
 
-  onPlayerConnect(data) {
+  onEnter(data) {
     if (!this.player) {
       var tile = this.movement.getTileAt(data.player.x, data.player.y)
       this.player = new Player(data.player.id, this, tile.pixelX+8, tile.pixelY+8);
       this.initCamera(this.player);
       for (var id in data.players) {
         if (id != data.player.id) {
-          this.onOtherPlayerConnect(data.players[id])
+          this.onOtherEnter(data.players[id])
         }
       }
     }
   }
 
-  onOtherPlayerConnect(player) {
+  onOtherEnter(player) {
     if (!this.players[player.id]) {
       var tile = this.movement.getTileAt(player.x, player.y)
       this.players[player.id] = new Player(player.id, this, tile.pixelX+8, tile.pixelY+8);
     }
   }
 
-  onPlayerMoveTo(x,y) {
+  onMoveTo(x,y) {
     if (this.player) {
       var tile = this.movement.getTileAt(x,y)
       this.player.moveTo(tile)
     }
   }
 
-  onOtherPlayerMoveTo(id, x, y) {
+  onOtherMoveTo(id, x, y) {
     if (this.players[id]) {
       var tile = this.movement.getTileAt(x,y)
       this.players[id].moveTo(tile)
@@ -142,7 +142,7 @@ class MainScene extends Phaser.Scene {
     this.input.on('pointerdown', _.throttle(pointer => {
       var tile = this.movement.getTileAtPointer(pointer)
       if (tile) {
-        this.socket.emit('playerMoveTo', {x: tile.x, y: tile.y})
+        this.socket.emit('moveTo', {x: tile.x, y: tile.y})
       }
     }, 500), this);
 
@@ -152,7 +152,7 @@ class MainScene extends Phaser.Scene {
   create()
   {
 
-    console.log("BOOTED");
+    console.log("MainScene");
 
     this.createMap();
     this.initPlayer();
