@@ -2,6 +2,7 @@ import Player from '../objects/Player'
 import Movement from '../utils/Movement'
 import io from 'socket.io-client';
 import _ from 'underscore';
+import easystarjs from 'easystarjs';
 
 
 class MainScene extends Phaser.Scene {
@@ -9,6 +10,7 @@ class MainScene extends Phaser.Scene {
     super({
       key: 'MainScene'
     })
+    this.easystar = null
   }
 
   preload()
@@ -101,14 +103,14 @@ class MainScene extends Phaser.Scene {
   onMoveTo(x,y) {
     if (this.player) {
       var tile = this.movement.getTileAt(x,y)
-      this.player.moveTo(tile)
+      this.player.setState({tile})
     }
   }
 
   onOtherMoveTo(id, x, y) {
     if (this.players[id]) {
       var tile = this.movement.getTileAt(x,y)
-      this.players[id].moveTo(tile)
+      this.players[id].setState({tile})
     }
   }
 
@@ -149,12 +151,33 @@ class MainScene extends Phaser.Scene {
     this.cursors = this.input.keyboard.createCursorKeys();
   }
 
+  initEasystar() {
+    this.easystar = new easystarjs.js();
+    let map = this.map
+    var mapData = []
+    for (var x of map.layers[0].data) {
+      let b = [];
+      for (var y of x) {
+        b.push(y.index)
+      }
+      mapData.push(b)
+    }
+    this.easystar.setGrid(mapData)
+    let acceptableTiles = []
+    for (var i=0;i<100;i++) { acceptableTiles.push(i) }
+    acceptableTiles = acceptableTiles.filter( function( i ) {
+      return !map.layers[0].collideIndexes.includes( i );
+    } );
+    this.easystar.setAcceptableTiles(acceptableTiles);
+  }
+
   create()
   {
 
     console.log("MainScene");
 
     this.createMap();
+    this.initEasystar();
     this.initPlayer();
     this.initDebug();
     this.initInput();
@@ -170,6 +193,10 @@ class MainScene extends Phaser.Scene {
     // if (this.playerMoveTo && Phaser.Math.Fuzzy.Equal(this.playerMoveTo.x, this.player.body.gameObject.x, 1) && Phaser.Math.Fuzzy.Equal(this.playerMoveTo.y, this.player.body.gameObject.y, 1)) {
     //   this.playerMoveTo = null
     //   this.player.body.setVelocity(0)
+    // }
+    // FIXME maybe setTimeout to make these async
+    // for (var player of this.players) {
+      // player.update(time, delta);
     // }
   }
 

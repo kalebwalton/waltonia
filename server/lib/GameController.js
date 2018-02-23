@@ -18,6 +18,9 @@ class GameController {
       exit: this.onExit
     }
     this.io.on('connection', socket => {
+      //setTimeout(() => {
+      //  this.onTick.bind(this)({'tick', socket})
+      //}, 1000);
       for(var name in this.handlerMap) {
         let nameRef = name // Create a new reference or else 'name' gets the last reference
         socket.on(nameRef, data => {
@@ -57,6 +60,12 @@ class GameController {
     this.socketIdToPlayer[socket.id] = player
   }
 
+  onTick(e) {
+    var {socket} = e
+    let player = this.getPlayer(socket)
+    socket.broadcast.emit('tick', this.state.getTickState())
+  }
+
   onEnter(e) {
     console.log("enter")
 
@@ -90,11 +99,6 @@ class GameController {
       player.moveTo(data.x, data.y)
 
       socket.emit('moveTo', {
-        x: player.x,
-        y: player.y
-      });
-      socket.broadcast.emit('otherMoveTo', {
-        id: player.id,
         x: player.x,
         y: player.y
       });
