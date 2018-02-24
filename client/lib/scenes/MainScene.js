@@ -54,7 +54,7 @@ class MainScene extends Phaser.Scene {
   }
 
   createMap() {
-    this.map = this.make.tilemap({ key: 'map', tileWidth: 16, tileHeight: 16 });
+    this.map = this.make.tilemap({ key: 'map', tileWidth: 20, tileHeight: 20 });
     var tileset = this.map.addTilesetImage('tiles');
     this.layer = this.map.createStaticLayer(0, tileset, 0, 0);
 

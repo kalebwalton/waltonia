@@ -2,20 +2,20 @@ import Character from './Character'
 class Mob extends Character {
   constructor(config) {
     super(config)
-    this.bounds = {from: {x: 1, y:1}, to: {x:20, y:20}}
+    this.bounds = {from: {x: 100, y:110}, range: {x:15, y:15}}
   }
 
   randomMoveTo() {
     this.updateState({tile: {
-      x: Math.floor(Math.random()*this.bounds.to.x+this.bounds.from.x),
-      y: Math.floor(Math.random()*this.bounds.to.y+this.bounds.from.y)
+      x: Math.floor(Math.random()*this.bounds.range.x)+this.bounds.from.x,
+      y: Math.floor(Math.random()*this.bounds.range.y)+this.bounds.from.y
     }})
     console.debug("Moved to:", this.tile)
   }
 
   tick() {
     if (!this.moving) {
-      // this.randomMoveTo()
+      this.randomMoveTo()
     }
     super.tick()
   }

@@ -4,8 +4,8 @@ class MainScene {
   constructor() {
     this.players = {}
     this.mobs = {
-      mob1: new Mob({id: 'mob1', scene: this, tile: {x: 5, y: 5}}),
-      mob2: new Mob({id: 'mob2', scene: this, tile: {x: 10, y: 10}})
+      mob1: new Mob({id: 'mob1', scene: this, tile: {x: 110, y: 110}}),
+      mob2: new Mob({id: 'mob2', scene: this, tile: {x: 105, y: 105}})
     }
   }
 
@@ -22,7 +22,7 @@ class MainScene {
 
   newPlayer(id) {
     var id = id ? id : this.generateId()
-    this.players[id] = new Player({scene:this, id, tile: {x: Math.floor(Math.random() * 10) + 1, y:Math.floor(Math.random() * 10) + 1}})
+    this.players[id] = new Player({scene:this, id, tile: {x: Math.floor(Math.random() * 10) + 100, y:Math.floor(Math.random() * 10) + 110}})
     return this.players[id]
   }
 

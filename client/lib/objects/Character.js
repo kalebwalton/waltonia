@@ -14,6 +14,7 @@ class Character extends Phaser.GameObjects.Sprite {
     scene.physics.world.enable(this)
     this.setOrigin(0,0)
     this.setInteractive()
+    this.tint = Math.random() * 0xffffff
     scene.add.existing(this)
 
     this.highlight = new CharacterHighlight({scene, x: tile.pixelX, y: tile.pixelY})
@@ -109,6 +110,20 @@ class Character extends Phaser.GameObjects.Sprite {
         if (this.x == fromTile.pixelX && this.y == fromTile.pixelY) {
           path.shift()
         }
+
+        // If there is a character at the end of the path then pop it off.
+        var lastPathItem = path[path.length-1]
+        var characters = []
+        characters = characters.concat(Object.values(this.scene.players))
+        characters = characters.concat(Object.values(this.scene.mobs))
+        var remove = false
+        for (var character of characters) {
+          var charTile = this.scene.movement.getTileAtObject(character)
+          if (charTile.x == lastPathItem.x && charTile.y == lastPathItem.y) {
+            remove = true
+          }
+        }
+        if (remove) path.pop()
         this.movementPath = path
         if (!this.moving) {
           this.moveToByPath(callback)
