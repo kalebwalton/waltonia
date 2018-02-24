@@ -10,6 +10,8 @@ class BootScene extends Phaser.Scene {
     this.load.image('tiles', 'assets/tilemaps/tiles/waltonia_tiles_16.png');
     this.load.tilemapCSV('map', 'assets/tilemaps/csv/waltonia_level1.csv');
     this.load.spritesheet('player', 'assets/sprites/player.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('mob', 'assets/sprites/mob.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('highlight', 'assets/sprites/highlight.png', { frameWidth: 16, frameHeight: 16 });
   }
 
   create()

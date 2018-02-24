@@ -1,7 +1,12 @@
 import Player from './objects/Player'
+import Mob from './objects/Mob'
 class MainScene {
   constructor() {
     this.players = {}
+    this.mobs = {
+      mob1: new Mob({id: 'mob1', scene: this, tile: {x: 5, y: 5}}),
+      mob2: new Mob({id: 'mob2', scene: this, tile: {x: 10, y: 10}})
+    }
   }
 
   getPlayer(id) {
@@ -33,7 +38,8 @@ class MainScene {
 
   getTickState() {
     return {
-      players: this.getEnteredPlayers()
+      players: this.getEnteredPlayers(),
+      mobs: this.mobs
     }
   }
 

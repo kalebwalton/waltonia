@@ -1,4 +1,5 @@
 import Player from '../objects/Player'
+import Mob from '../objects/Mob'
 import Movement from '../utils/Movement'
 import io from 'socket.io-client';
 import _ from 'underscore';
@@ -18,6 +19,7 @@ class MainScene extends Phaser.Scene {
     this.movement = new Movement(this)
     this.speed = 100
     this.players = {}
+    this.mobs = {}
     this.url = new URL(window.location.href);
 
     this.socket = io(this.url.protocol+"//"+this.url.hostname+":3002");
@@ -45,7 +47,7 @@ class MainScene extends Phaser.Scene {
       this.onOtherEnter(data.player)
     })
     socket.on('tick', (data) => {
-      console.log("tick: ", data)
+      console.debug("tick: ", data)
       this.onTick(data)
     })
 
@@ -97,6 +99,9 @@ class MainScene extends Phaser.Scene {
     if (!this.players[player.id]) {
       var tile = this.movement.getTileAt(player.tile.x, player.tile.y)
       this.players[player.id] = new Player({id: player.id, scene: this, tile});
+      this.players[player.id].on('pointerdown', (pointer) => {
+        this.onMobOrOtherPlayerClick(this.players[player.id])
+      });
     }
   }
 
@@ -145,7 +150,15 @@ class MainScene extends Phaser.Scene {
       if (tile) {
         this.socket.emit('moveTo', {x: tile.x, y: tile.y})
       }
+      // Since the sprite click event happens after this event we need to do
+      // something tricky. We could probably avoid it if we listened for events
+      // on each tile in the tilemap instead (probably better).
+      // We clear this timeout in the follow method below.
+      this.notFollowTimeout = setTimeout(() => {
+        this.player.notFollow()
+      }, 50)
     }, 500), this);
+
 
     this.cursors = this.input.keyboard.createCursorKeys();
   }
@@ -199,6 +212,36 @@ class MainScene extends Phaser.Scene {
         }
       }
     }
+    for (var mobId in data.mobs) {
+      var mob = data.mobs[mobId]
+      if (this.mobs[mob.id]) {
+        this.mobs[mob.id].updateState(mob)
+      } else {
+        var tile = this.movement.getTileAt(mob.tile.x, mob.tile.y)
+        if (tile) {
+          this.newMob(mob.id, tile)
+        } else {
+          console.warn("Mob spawned on an invalid tile", this.mobs[mob.id])
+        }
+      }
+    }
+  }
+
+  onMobOrOtherPlayerClick(mobOrOtherPlayer) {
+    this.player.follow(mobOrOtherPlayer)
+    if (this.notFollowTimeout) {
+      clearTimeout(this.notFollowTimeout)
+      this.notFollowTimeout = null
+    }
+  }
+
+  newMob(id, tile) {
+    var mob = new Mob({id: id, scene: this, tile});
+    mob.on('pointerdown', (pointer) => {
+      this.onMobOrOtherPlayerClick(mob)
+    });
+
+    this.mobs[mob.id] = mob
   }
 
   update(time, delta) {

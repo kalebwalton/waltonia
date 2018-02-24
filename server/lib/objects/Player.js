@@ -5,7 +5,6 @@ class Player extends Character {
     this.entered = config.entered
   }
 
-  // Setters
   enter() {
     this.updateState({entered: true})
   }

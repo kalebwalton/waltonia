@@ -1,29 +1,83 @@
+import CharacterHighlight from './CharacterHighlight'
 class Character extends Phaser.GameObjects.Sprite {
   constructor({scene, id, tile, texture, frame}) {
     texture = texture ? texture : 'character'
     frame = frame ? frame : 1
-
-    super(scene, tile.pixelX+8, tile.pixelY+8, texture, frame)
+    super(scene, tile.pixelX, tile.pixelY, texture, frame)
     this.tile = tile
     this.id = id
-    this.targetTile = null
     this.movementPath = []
     this.moving = false
+    this.following = null
+    this.followedBy = null
 
-    scene.physics.world.enable(this);
-    this.body.offset = {x:8, y:8}
-    scene.add.existing(this);
+    scene.physics.world.enable(this)
+    this.setOrigin(0,0)
+    this.setInteractive()
+    scene.add.existing(this)
+
+    this.highlight = new CharacterHighlight({scene, x: tile.pixelX, y: tile.pixelY})
+    this.highlightEnabled = true
 
   }
 
-  updateState({tile}) {
+  showHighlight() {
+    if (this.highlightEnabled) {
+      this.highlight.setVisible(true)
+    }
+  }
+
+  hideHighlight() {
+    this.highlight.setVisible(false)
+  }
+
+  follow(character) {
+    console.log("Follow", character)
+    this.updateState({following: character})
+  }
+
+  notFollow() {
+    this.updateState({following: null})
+  }
+
+  updateState({tile, followedBy, following}) {
     // Handle movement state. Only do a moveTo if we're not already on our way to moving there.
-    if (tile && tile.x != this.tile.x || tile.y != this.tile.y) {
-      var mp = this.movementPath
-      var lastPathItem = mp.length > 0 ? mp[mp.length-1] : null
-      if (!lastPathItem || (lastPathItem.x != tile.x || lastPathItem.y != tile.y)) {
-        // Need to do getTileAt in case this is an update from the server which won't be the actual tile
-        this.handleMoveTo(this.scene.movement.getTileAt(tile.x, tile.y))
+    if (tile !== undefined && (tile.x != this.tile.x || tile.y != this.tile.y)) {
+      // Need to do getTileAt in case this is an update from the server which
+      // won't be the actual tile reference. We use pixelX as a test.
+      var toTile = tile.pixelX ? tile : this.scene.movement.getTileAt(tile.x, tile.y)
+      if (toTile) {
+        this.handleMoveTo(toTile)
+      } else {
+        console.warn("Character moved to an invalid tile", this, tile)
+      }
+    }
+    if (following !== undefined) {
+      if (following == null) {
+        if (this.following) {
+          this.following.hideHighlight()
+        }
+        if (this.followingInterval) {
+          clearInterval(this.followingInterval)
+        }
+        this.following = null
+      } else {
+        if (this.following && this.following != following) {
+          this.following.hideHighlight()
+          if (this.followingInterval) {
+            clearInterval(this.followingInterval)
+          }
+        }
+        this.following = following
+        this.following.showHighlight()
+      }
+      if (this.following) {
+        this.followingInterval = setInterval(() => {
+          var toTile = this.scene.movement.getTileAtObject(this.following)
+          console.log("Moving to", toTile)
+          // Figure out a better answer to this... maybe piggy back on 'tick' from the server instead
+          this.scene.socket.emit('moveTo', {x: toTile.x, y: toTile.y})
+        }, 250)
       }
     }
   }
@@ -39,11 +93,22 @@ class Character extends Phaser.GameObjects.Sprite {
   }
 
   handleMoveTo(toTile, callback) {
-    var fromTile = this.tile;
+
+    var mp = this.movementPath
+    var fromTile = null
+    if (mp && mp.length > 0) {
+      fromTile = this.scene.movement.getTileAt(mp[0].x, mp[0].y);
+    } else {
+      fromTile = this.scene.movement.getTileAtObject(this);
+    }
     this.pathTo(fromTile, toTile, path => {
-      // Remove the first entry off the path since it's the current tile
-      if (path) {
-        path.shift()
+      if (path && path.length > 0) {
+        // If we're at rest then remove the first path item since it'll be the
+        // current tile. But if we're in the middle of a movement then don't
+        // do anything.
+        if (this.x == fromTile.pixelX && this.y == fromTile.pixelY) {
+          path.shift()
+        }
         this.movementPath = path
         if (!this.moving) {
           this.moveToByPath(callback)
@@ -54,7 +119,6 @@ class Character extends Phaser.GameObjects.Sprite {
 
   moveToByPath(callback) {
     if (!this.movementPath || this.movementPath.length == 0) {
-      this.targetTile = null
       this.moving = false
       if (callback) {
         callback();
@@ -65,12 +129,13 @@ class Character extends Phaser.GameObjects.Sprite {
     }
     var pathItem = this.movementPath[0]
     var toTile = this.scene.movement.getTileAt(pathItem.x, pathItem.y)
+    var fromTile = this.scene.movement.getTileAtObject(this)
     this.scene.tweens.add({
-      targets: this,
-      x: toTile.pixelX + this.body.offset.x,
-      y: toTile.pixelY + this.body.offset.y,
+      targets: [this, this.highlight],
+      x: toTile.pixelX,// + this.body.offset.x,
+      y: toTile.pixelY,// + this.body.offset.y,
       ease: 'None',
-      duration: 50,
+      duration: 250,
       onComplete: () => {
         this.movementPath.shift()
         this.tile = toTile
