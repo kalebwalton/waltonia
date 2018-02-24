@@ -48,6 +48,10 @@ class MainScene extends Phaser.Scene {
       console.log("otherEnter: ", data)
       this.onOtherEnter(data.player)
     })
+    socket.on('tick', (data) => {
+      console.log("tick: ", data)
+      this.onTick(data)
+    })
 
   }
 
@@ -187,6 +191,25 @@ class MainScene extends Phaser.Scene {
     // collisions in update via: this.physics.world.collide(player, layer).
     //this.physics.add.collider(this.player, this.layer);
 
+  }
+
+  onTick(data) {
+    for (var playerId in data.players) {
+      var player = data.players[playerId]
+      if (this.player && player.id == this.player.id) {
+        this.player.setState({tile: {
+          x: player.x,
+          y: player.y
+        }})
+      } else {
+        if (this.players[player.id]) {
+          this.players[player.id].setState({tile: {
+            x: player.x,
+            y: player.y
+          }})
+        }
+      }
+    }
   }
 
   update(time, delta) {

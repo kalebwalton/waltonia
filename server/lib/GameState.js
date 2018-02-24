@@ -49,5 +49,11 @@ class GameState {
     return ret
   }
 
+  getTickState() {
+    return {
+      players: this.getEnteredPlayers()
+    }
+  }
+
 }
 export default GameState
