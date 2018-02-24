@@ -24,13 +24,9 @@ class MainScene extends Phaser.Scene {
 
     var socket = this.socket
 
-    socket.on('moveTo', (data) => {
-      console.log("moveTo: ", data)
-      this.onMoveTo(data.x, data.y)
-    })
-    socket.on('otherMoveTo', (data) => {
-      console.log("otherMoveTo: ", data)
-      this.onOtherMoveTo(data.id, data.x, data.y)
+    socket.on('moveTo', (player) => {
+      console.log("moveTo: ", player)
+      this.onMoveTo(player)
     })
     socket.on('exit', () => {
       console.log("exit")
@@ -86,8 +82,8 @@ class MainScene extends Phaser.Scene {
 
   onEnter(data) {
     if (!this.player) {
-      var tile = this.movement.getTileAt(data.player.x, data.player.y)
-      this.player = new Player(data.player.id, this, tile.pixelX+8, tile.pixelY+8);
+      var tile = this.movement.getTileAt(data.player.tile.x, data.player.tile.y)
+      this.player = new Player({id: data.player.id, scene: this, tile});
       this.initCamera(this.player);
       for (var id in data.players) {
         if (id != data.player.id) {
@@ -99,22 +95,21 @@ class MainScene extends Phaser.Scene {
 
   onOtherEnter(player) {
     if (!this.players[player.id]) {
-      var tile = this.movement.getTileAt(player.x, player.y)
-      this.players[player.id] = new Player(player.id, this, tile.pixelX+8, tile.pixelY+8);
+      var tile = this.movement.getTileAt(player.tile.x, player.tile.y)
+      this.players[player.id] = new Player({id: player.id, scene: this, tile});
     }
   }
 
-  onMoveTo(x,y) {
+  onMoveTo(player) {
     if (this.player) {
-      var tile = this.movement.getTileAt(x,y)
-      this.player.setState({tile})
+      this.player.updateState({tile: player.tile})
     }
   }
 
   onOtherMoveTo(id, x, y) {
     if (this.players[id]) {
       var tile = this.movement.getTileAt(x,y)
-      this.players[id].setState({tile})
+      this.players[id].updateState({tile})
     }
   }
 
@@ -197,16 +192,10 @@ class MainScene extends Phaser.Scene {
     for (var playerId in data.players) {
       var player = data.players[playerId]
       if (this.player && player.id == this.player.id) {
-        this.player.setState({tile: {
-          x: player.x,
-          y: player.y
-        }})
+        this.player.updateState(player)
       } else {
         if (this.players[player.id]) {
-          this.players[player.id].setState({tile: {
-            x: player.x,
-            y: player.y
-          }})
+          this.players[player.id].updateState(player)
         }
       }
     }

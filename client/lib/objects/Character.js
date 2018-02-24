@@ -1,39 +1,44 @@
 class Character extends Phaser.GameObjects.Sprite {
-  constructor(id, scene, x, y, texture, frame) {
-    texture = texture ? texture : 'player'
+  constructor({scene, id, tile, texture, frame}) {
+    texture = texture ? texture : 'character'
     frame = frame ? frame : 1
-    super(scene, x, y, texture, frame)
+
+    super(scene, tile.pixelX+8, tile.pixelY+8, texture, frame)
+    this.tile = tile
+    this.id = id
+    this.targetTile = null
+    this.movementPath = []
+    this.moving = false
+
     scene.physics.world.enable(this);
     this.body.offset = {x:8, y:8}
     scene.add.existing(this);
 
-    this.id = id
-    this.tile = this.scene.movement.getTileAtObject(this)
-    this.targetTile = null
-    this.movementPath = []
-    this.moving = false
   }
 
-  setState(state) {
+  updateState({tile}) {
     // Handle movement state. Only do a moveTo if we're not already on our way to moving there.
-    if (state.tile.x != this.tile.x || state.tile.y != this.tile.y) {
+    if (tile && tile.x != this.tile.x || tile.y != this.tile.y) {
       var mp = this.movementPath
       var lastPathItem = mp.length > 0 ? mp[mp.length-1] : null
-      if (!lastPathItem || (lastPathItem.x != state.tile.x || lastPathItem.y != state.tile.y)) {
-        this.moveTo(this.scene.movement.getTileAt(state.tile.x, state.tile.y))
+      if (!lastPathItem || (lastPathItem.x != tile.x || lastPathItem.y != tile.y)) {
+        // Need to do getTileAt in case this is an update from the server which won't be the actual tile
+        this.handleMoveTo(this.scene.movement.getTileAt(tile.x, tile.y))
       }
     }
   }
 
   pathTo(fromTile, toTile, callback) {
     let easystar = this.scene.easystar
-    // var fromTile = scene.map.getTileAtWorldXY(fromX, fromY)
-    // var toTile = scene.map.getTileAtWorldXY(toX, toY)
     easystar.findPath(fromTile.x, fromTile.y, toTile.x, toTile.y, callback);
     easystar.calculate();
   }
 
-  moveTo(toTile, callback) {
+  moveTo(tile) {
+    this.updateState({tile})
+  }
+
+  handleMoveTo(toTile, callback) {
     var fromTile = this.tile;
     this.pathTo(fromTile, toTile, path => {
       // Remove the first entry off the path since it's the current tile

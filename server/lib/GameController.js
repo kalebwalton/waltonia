@@ -3,12 +3,13 @@ import babelify from 'express-babelify-middleware';
 import path from 'path';
 import http from 'http';
 import io_server from 'socket.io';
-import GameState from './GameState'
+import MainScene from './MainScene'
+import {selectPlayer, selectPlayers, selectTickState} from './selectors/index'
 
 class GameController {
 
   constructor(config) {
-    this.state = config.state
+    this.scene = config.scene
     this.io = this.initIO()
     this.socketIdToPlayer = {}
     this.handlerMap = {
@@ -60,7 +61,7 @@ class GameController {
 
   tick() {
     console.log("tick")
-    this.io.sockets.emit('tick', this.state.getTickState())
+    this.io.sockets.emit('tick', selectTickState(this.scene.getTickState()))
     setTimeout(() => {
       this.tick.bind(this)()
     }, 1000);
@@ -73,21 +74,21 @@ class GameController {
     var playerId = data
     var player = null
     if (playerId) {
-      player = this.state.getPlayer(playerId)
+      player = this.scene.getPlayer(playerId)
     }
     if (!player) {
-      player = this.state.newPlayer(playerId)
+      player = this.scene.newPlayer(playerId)
     }
     console.log("enter", playerId, player)
     this.setPlayer(socket, player)
     player.enter()
 
     socket.emit('enter', {
-      player: player,
-      players: this.state.getEnteredPlayers()
+      player: selectPlayer(player),
+      players: selectPlayers(this.scene.getEnteredPlayers())
     });
     socket.broadcast.emit('otherEnter', {
-      player: player
+      player: selectPlayer(player)
     });
   }
 
@@ -96,12 +97,8 @@ class GameController {
     let player = this.getPlayer(socket)
     console.log("moveTo", player)
     if (player && player.entered) {
-      player.moveTo(data.x, data.y)
-
-      socket.emit('moveTo', {
-        x: player.x,
-        y: player.y
-      });
+      player.moveTo({x:data.x, y:data.y})
+      socket.emit('moveTo', selectPlayer(player));
     }
   }
 

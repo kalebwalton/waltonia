@@ -1,22 +1,9 @@
-import Player from './Player'
-class GameState {
+import Player from './objects/Player'
+class MainScene {
   constructor() {
     this.players = {}
   }
-  /*
-  {
-    one: {
-      id: 'one',
-      x: 5,
-      y: 5
-    },
-    two: {
-      id: 'two',
-      x: 10,
-      y: 10
-    }
-  };
-  */
+
   getPlayer(id) {
     return this.players[id]
   }
@@ -30,12 +17,7 @@ class GameState {
 
   newPlayer(id) {
     var id = id ? id : this.generateId()
-    this.players[id] = new Player({
-      id: id,
-      connected: true,
-      x: Math.floor(Math.random() * 10) + 1,
-      y: Math.floor(Math.random() * 10) + 1
-    })
+    this.players[id] = new Player({scene:this, id, tile: {x: Math.floor(Math.random() * 10) + 1, y:Math.floor(Math.random() * 10) + 1}})
     return this.players[id]
   }
 
@@ -56,4 +38,4 @@ class GameState {
   }
 
 }
-export default GameState
+export default MainScene

@@ -1,5 +1,3 @@
-import easystarjs from 'easystarjs';
-
 class Movement {
 
   constructor(scene) {
@@ -22,7 +20,6 @@ class Movement {
   getTileAt(x, y) {
     return this.scene.map.getTileAt(x, y, false, 'layer')
   }
-
 
 }
 export default Movement

@@ -1,2 +1,2 @@
-import Game from './lib/Game';
-var game = new Game()
+import Waltonia from './lib/Waltonia';
+var waltonia = new Waltonia()
