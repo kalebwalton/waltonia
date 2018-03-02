@@ -22,7 +22,7 @@ class MainScene extends Phaser.Scene {
     this.mobs = {}
     this.url = new URL(window.location.href);
 
-    this.socket = io(this.url.protocol+"//"+this.url.hostname+":3002");
+    this.socket = io(this.url.protocol+"//"+this.url.hostname+":3000");
 
     var socket = this.socket
 

@@ -34,7 +34,7 @@ class GameController {
     var app = express();
     var server = http.createServer(app);
     var io = io_server(server);
-    var port = process.env.PORT || 3002;
+    var port = process.env.PORT || 3000;
 
     server.listen(port, function () {
       console.log('Server listening at port %d', port);
