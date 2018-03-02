@@ -5,11 +5,7 @@
   "author": "niklas berg <me@niklasberg.se>",
   "main": "index.js",
   "scripts": {
-    "start": "babel-watch server/main.js",
-    "buildserver": "browserify server/main.js -o static/bundle.js -t [ babelify --presets [ env ] ]",
-    "deploy": "webpack --config webpack.production.config.js",
-    "watch": "rm -rf dist/* && watchify server/main.js -o dist/bundle.js -t [ babelify --presets [ env ] ]",
-    "test": "eslint ./src-client/**/**.js"
+    "start": "babel-watch server/main.js"
   },
   "license": "MIT",
   "devDependencies": {

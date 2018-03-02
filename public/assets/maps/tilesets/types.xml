@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objecttypes>
+ <objecttype name="impassable" color="#a0a0a4">
+  <property name="collide" type="bool" default="true"/>
+ </objecttype>
+ <objecttype name="passable" color="#a0a0a4">
+  <property name="collide" type="bool" default="false"/>
+ </objecttype>
+</objecttypes>

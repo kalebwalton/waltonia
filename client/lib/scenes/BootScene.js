@@ -7,10 +7,10 @@ class BootScene extends Phaser.Scene {
 
   preload()
   {
-    this.load.image('tiles', 'assets/tilemaps/tiles/wilderness.png');
-    this.load.tilemapCSV('map', 'assets/tilemaps/csv/waltonia_wilderness.csv');
-    this.load.spritesheet('player', 'assets/sprites/player.png', { frameWidth: 20, frameHeight: 20 });
-    this.load.spritesheet('mob', 'assets/sprites/mob.png', { frameWidth: 20, frameHeight: 20 });
+    this.load.image('tiles', 'assets/maps/tiles/combined/wilderness.png');
+    this.load.tilemapCSV('map', 'assets/maps/defs/wilderness.csv');
+    this.load.spritesheet('player', 'assets/sprites/players/female_warrior.png', { frameWidth: 20, frameHeight: 20 });
+    this.load.spritesheet('mob', 'assets/sprites/mobs/little_flare.png', { frameWidth: 20, frameHeight: 20 });
     this.load.spritesheet('highlight', 'assets/sprites/highlight.png', { frameWidth: 20, frameHeight: 20 });
   }
 
