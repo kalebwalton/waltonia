@@ -51,21 +51,51 @@ class MainScene extends Phaser.Scene {
       this.onTick(data)
     })
 
+    this.load.tilemapTiledJSON('map', 'assets/maps/defs/wilderness.json');
+    this.load.image('ground', 'assets/maps/tiles/combined/wilderness.png');
+    this.load.spritesheet('player', 'assets/sprites/players/female_warrior.png', { frameWidth: 20, frameHeight: 20 });
+    this.load.spritesheet('mob', 'assets/sprites/mobs/little_flare.png', { frameWidth: 20, frameHeight: 20 });
+    this.load.spritesheet('highlight', 'assets/sprites/highlight.png', { frameWidth: 20, frameHeight: 20 });
+
   }
 
   createMap() {
     this.map = this.make.tilemap({ key: 'map', tileWidth: 20, tileHeight: 20 });
-    var tileset = this.map.addTilesetImage('tiles');
-    this.layer = this.map.createStaticLayer(0, tileset, 0, 0);
+    var tileset = this.map.addTilesetImage('ground');
+    var layer = this.map.createStaticLayer('ground', tileset);
 
     //  This isn't totally accurate, but it'll do for now
-    this.map.setCollisionBetween(54, 83);
+    var tileData = this.map.tilesets[this.map.getTilesetIndex('ground')].tileData;
+    var collideIndexes = []
+    for (var i in tileData) {
+      switch (tileData[i].type) {
+        case 'block':
+        case 'sign':
+        case 'stone':
+        case 'tombstone':
+        case 'tree':
+        case 'well':
+          collideIndexes.push(i)
+          break
+
+        case 'door':
+        case 'grass':
+        case 'gravel':
+        case 'path':
+        case 'sand':
+        case 'stair':
+        default:
+          break
+      }
+    }
+    console.log("Collide", collideIndexes)
+    this.map.setCollision(collideIndexes, true, true, layer)
   }
 
   initPlayer() {
     var playerId = this.url.searchParams.get("id");
     this.socket.emit('enter', playerId)
-    console.debug("INIT PLAYER")
+    console.log("INIT PLAYER")
   }
 
   onDisconnect() {
@@ -147,6 +177,7 @@ class MainScene extends Phaser.Scene {
 
     this.input.on('pointerdown', _.throttle(pointer => {
       var tile = this.movement.getTileAtPointer(pointer)
+      console.log("Tile", tile)
       if (tile) {
         this.socket.emit('moveTo', {x: tile.x, y: tile.y})
       }
@@ -197,7 +228,6 @@ class MainScene extends Phaser.Scene {
 
     // Set up the player to collide with the tilemap layer. Alternatively, you can manually run
     // collisions in update via: this.physics.world.collide(player, layer).
-    //this.physics.add.collider(this.player, this.layer);
 
   }
 
@@ -245,14 +275,7 @@ class MainScene extends Phaser.Scene {
   }
 
   update(time, delta) {
-    // if (this.playerMoveTo && Phaser.Math.Fuzzy.Equal(this.playerMoveTo.x, this.player.body.gameObject.x, 1) && Phaser.Math.Fuzzy.Equal(this.playerMoveTo.y, this.player.body.gameObject.y, 1)) {
-    //   this.playerMoveTo = null
-    //   this.player.body.setVelocity(0)
-    // }
-    // FIXME maybe setTimeout to make these async
-    // for (var player of this.players) {
-      // player.update(time, delta);
-    // }
+
   }
 
   drawDebug() {

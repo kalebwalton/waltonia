@@ -18,7 +18,7 @@ class Movement {
   }
 
   getTileAt(x, y) {
-    return this.scene.map.getTileAt(x, y, false, 'layer')
+    return this.scene.map.getTileAt(x, y, false, 'ground')
   }
 
 }
