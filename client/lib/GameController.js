@@ -17,23 +17,23 @@ class GameController {
     var socket = this.socket
 
     socket.on('moveTo', (player) => {
-      console.log("moveTo: ", player)
+      console.debug("moveTo: ", player)
       this.onMoveTo(player)
     })
     socket.on('exit', () => {
-      console.log("exit")
+      console.debug("exit")
       this.onExit()
     })
     socket.on('otherExit', (data) => {
-      console.log("otherExit: ", data)
+      console.debug("otherExit: ", data)
       this.onOtherExit(data)
     })
     socket.on('enter', (data) => {
-      console.log("enter: ", data)
+      console.debug("enter: ", data)
       this.onEnter(data)
     })
     socket.on('otherEnter', (data) => {
-      console.log("otherEnter: ", data)
+      console.debug("otherEnter: ", data)
       this.onOtherEnter(data.player)
     })
     socket.on('tick', (data) => {
@@ -65,7 +65,7 @@ class GameController {
 
   onOtherExit(player) {
     if (this.players[player.id]) {
-      console.log("Destroying ", this.players[player.id])
+      console.debug("Destroying ", this.players[player.id])
       this.players[player.id].destroy()
       delete this.players[player.id]
     }

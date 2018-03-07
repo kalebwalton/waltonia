@@ -38,32 +38,32 @@ class MainScene extends Phaser.Scene {
     console.log(this.map)
     var tileset = this.map.addTilesetImage('map');
     var layer = this.map.createStaticLayer('map', tileset);
-    //
-    // //  This isn't totally accurate, but it'll do for now
-    // var tileData = this.map.tilesets[0].tileData;
-    // var collideIndexes = []
-    // for (var i in tileData) {
-    //   switch (tileData[i].type) {
-    //     case 'block':
-    //     case 'sign':
-    //     case 'stone':
-    //     case 'tombstone':
-    //     case 'tree':
-    //     case 'well':
-    //       collideIndexes.push(i)
-    //       break
-    //
-    //     case 'door':
-    //     case 'grass':
-    //     case 'gravel':
-    //     case 'path':
-    //     case 'sand':
-    //     case 'stair':
-    //     default:
-    //       break
-    //   }
-    // }
-    // this.map.setCollision(collideIndexes, true, true, layer)
+
+    //  This isn't totally accurate, but it'll do for now
+    var tileData = this.map.tilesets[0].tileData;
+    var collideIndexes = []
+    for (var i in tileData) {
+      switch (tileData[i].type) {
+        case 'block':
+        case 'sign':
+        case 'stone':
+        case 'tombstone':
+        case 'tree':
+        case 'well':
+          collideIndexes.push(i)
+          break
+
+        case 'door':
+        case 'grass':
+        case 'gravel':
+        case 'path':
+        case 'sand':
+        case 'stair':
+        default:
+          break
+      }
+    }
+    this.map.setCollision(collideIndexes, true, true, layer)
   }
 
   initPlayer() {
@@ -97,10 +97,17 @@ class MainScene extends Phaser.Scene {
     this.easystar = new easystarjs.js();
     let map = this.map
     var mapData = []
-    for (var x of map.layers[0].data) {
+    for (var rows of map.layers[0].data) {
       let b = [];
-      for (var y of x) {
-        b.push(y.index)
+      for (var tile of rows) {
+        b.push(tile.index)
+        var tileData = map.tilesets[0].getTileData(tile.index)
+        if (tileData && map.tilesets[0].getTileData(tile.index).type == 'door') {
+          // give the door and the tile above the door some special directional rules
+          // so you can't enter doors from the top or exit them to the top
+          this.easystar.setDirectionalCondition(tile.x, tile.y, [easystarjs.BOTTOM]);
+          this.easystar.setDirectionalCondition(tile.x, tile.y-1, [easystarjs.TOP, easystarjs.LEFT, easystarjs.RIGHT]);
+        }
       }
       mapData.push(b)
     }
@@ -108,9 +115,11 @@ class MainScene extends Phaser.Scene {
     let acceptableTiles = []
     for (var i=0;i<1000;i++) { acceptableTiles.push(i) }
     acceptableTiles = acceptableTiles.filter( function( i ) {
-      return !map.layers[0].collideIndexes.includes( i );
+      // For some reason we are offset by index 1 when we get the tile index. Compensating here.
+      return !map.layers[0].collideIndexes.includes( ""+(i-1) );
     } );
     this.easystar.setAcceptableTiles(acceptableTiles);
+    console.log("ACCEPTAB", acceptableTiles, "GREID", mapData)
   }
 
   create()

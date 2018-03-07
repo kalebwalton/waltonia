@@ -11,6 +11,7 @@ class Character extends Phaser.GameObjects.Sprite {
     this.moving = false
     this.following = null
     this.followedBy = null
+    this.movementDuration = 50
 
     scene.physics.world.enable(this)
     this.setOrigin(0,0)
@@ -38,7 +39,6 @@ class Character extends Phaser.GameObjects.Sprite {
   }
 
   follow(character) {
-    console.log("Follow", character)
     this.updateState({following: character})
   }
 
@@ -53,7 +53,7 @@ class Character extends Phaser.GameObjects.Sprite {
       // won't be the actual tile reference. We use pixelX as a test.
       var toTile = tile.pixelX ? tile : this.scene.movement.getTileAt(tile.x, tile.y)
       if (toTile) {
-        console.log("Moving character to tile", toTile)
+        console.debug("Moving character to tile", toTile)
         this.handleMoveTo(toTile)
       } else {
         console.warn("Character moved to an invalid tile", this, tile)
@@ -81,7 +81,6 @@ class Character extends Phaser.GameObjects.Sprite {
       if (this.following) {
         this.followingInterval = setInterval(() => {
           var toTile = this.scene.movement.getTileAtObject(this.following)
-          console.log("Moving to", toTile)
           // Figure out a better answer to this... maybe piggy back on 'tick' from the server instead
           this.scene.socket.emit('moveTo', {x: toTile.x, y: toTile.y})
         }, 250)
@@ -109,8 +108,8 @@ class Character extends Phaser.GameObjects.Sprite {
       fromTile = this.scene.movement.getTileAtObject(this);
     }
     this.pathTo(fromTile, toTile, path => {
-      console.log("PATH", fromTile, toTile, path)
       if (path && path.length > 0) {
+        console.log("PATHING", fromTile, toTile, path.slice(0))
         // If we're at rest then remove the first path item since it'll be the
         // current tile. But if we're in the middle of a movement then don't
         // do anything.
@@ -157,7 +156,7 @@ class Character extends Phaser.GameObjects.Sprite {
       x: toTile.pixelX,// + this.body.offset.x,
       y: toTile.pixelY,// + this.body.offset.y,
       ease: 'None',
-      duration: 250,
+      duration: this.movementDuration,
       onComplete: () => {
         this.movementPath.shift()
         this.tile = toTile
