@@ -3,6 +3,7 @@ class Character extends Phaser.GameObjects.Sprite {
   constructor({scene, id, tile, texture, frame}) {
     texture = texture ? texture : 'character'
     frame = frame ? frame : 1
+    console.log("TILE PIXELS", tile.pixelX, tile.pixelY, tile)
     super(scene, tile.pixelX, tile.pixelY, texture, frame)
     this.tile = tile
     this.id = id
@@ -20,6 +21,10 @@ class Character extends Phaser.GameObjects.Sprite {
     this.highlight = new CharacterHighlight({scene, x: tile.pixelX, y: tile.pixelY})
     this.highlightEnabled = true
 
+  }
+
+  updateScene(scene) {
+    this.scene = scene
   }
 
   showHighlight() {
@@ -48,6 +53,7 @@ class Character extends Phaser.GameObjects.Sprite {
       // won't be the actual tile reference. We use pixelX as a test.
       var toTile = tile.pixelX ? tile : this.scene.movement.getTileAt(tile.x, tile.y)
       if (toTile) {
+        console.log("Moving character to tile", toTile)
         this.handleMoveTo(toTile)
       } else {
         console.warn("Character moved to an invalid tile", this, tile)
@@ -103,6 +109,7 @@ class Character extends Phaser.GameObjects.Sprite {
       fromTile = this.scene.movement.getTileAtObject(this);
     }
     this.pathTo(fromTile, toTile, path => {
+      console.log("PATH", fromTile, toTile, path)
       if (path && path.length > 0) {
         // If we're at rest then remove the first path item since it'll be the
         // current tile. But if we're in the middle of a movement then don't
@@ -112,7 +119,7 @@ class Character extends Phaser.GameObjects.Sprite {
         }
 
         // If there is a character at the end of the path then pop it off.
-        var lastPathItem = path[path.length-1]
+        /*var lastPathItem = path[path.length-1]
         var characters = []
         characters = characters.concat(Object.values(this.scene.players))
         characters = characters.concat(Object.values(this.scene.mobs))
@@ -123,7 +130,7 @@ class Character extends Phaser.GameObjects.Sprite {
             remove = true
           }
         }
-        if (remove) path.pop()
+        if (remove) path.pop()*/
         this.movementPath = path
         if (!this.moving) {
           this.moveToByPath(callback)
@@ -157,6 +164,15 @@ class Character extends Phaser.GameObjects.Sprite {
         this.moveToByPath.call(this, callback)
       }
     });
+  }
+
+  die() {
+    this.destroy()
+  }
+
+  destroy() {
+    console.log("DESTROYING", this)
+    super.destroy()
   }
 
 

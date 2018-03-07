@@ -14,11 +14,15 @@ class Movement {
   }
 
   getTileAtWorldXY(x, y) {
-    return this.scene.map.getTileAtWorldXY(x, y)
+    if (this.scene.map) {
+      return this.scene.map.getTileAtWorldXY(x, y)
+    }
   }
 
   getTileAt(x, y) {
-    return this.scene.map.getTileAt(x, y, false, 'ground')
+    if (this.scene.map) {
+      return this.scene.map.getTileAt(x, y, false, this.scene.map.layers[0].name)
+    }
   }
 
 }

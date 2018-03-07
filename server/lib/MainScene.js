@@ -22,7 +22,7 @@ class MainScene {
 
   newPlayer(id) {
     var id = id ? id : this.generateId()
-    this.players[id] = new Player({scene:this, id, tile: {x: Math.floor(Math.random() * 10) + 100, y:Math.floor(Math.random() * 10) + 110}})
+    this.players[id] = new Player({scene:this, id, tile: {x: Math.floor(Math.random() * 10) + 5, y:Math.floor(Math.random() * 10) + 10}})
     return this.players[id]
   }
 
