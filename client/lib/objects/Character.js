@@ -46,6 +46,21 @@ class Character extends Phaser.GameObjects.Sprite {
     this.updateState({following: null})
   }
 
+  handleFinalMovement(toTile) {
+    var layerObjects = this.scene.sys.game.helper.getLayerObjectsAtTile(this.scene.map, toTile.x, toTile.y)
+    if (layerObjects) {
+      for (var lo of layerObjects) {
+        switch(lo.objectLayerName) {
+          case 'portals':
+            var parts = lo.layerObject.name.split("_")
+            this.emit('enterPortal', parts[0], parts[1], parts[2])
+          default:
+            break
+        }
+      }
+    }
+  }
+
   updateState({tile, followedBy, following}) {
     // Handle movement state. Only do a moveTo if we're not already on our way to moving there.
     if (tile !== undefined && (tile.x != this.tile.x || tile.y != this.tile.y)) {
@@ -54,7 +69,9 @@ class Character extends Phaser.GameObjects.Sprite {
       var toTile = tile.pixelX ? tile : this.scene.movement.getTileAt(tile.x, tile.y)
       if (toTile) {
         console.debug("Moving character to tile", toTile)
-        this.handleMoveTo(toTile)
+        this.handleMoveTo(toTile, () => {
+          this.handleFinalMovement(toTile)
+        })
       } else {
         console.warn("Character moved to an invalid tile", this, tile)
       }
@@ -109,7 +126,6 @@ class Character extends Phaser.GameObjects.Sprite {
     }
     this.pathTo(fromTile, toTile, path => {
       if (path && path.length > 0) {
-        console.log("PATHING", fromTile, toTile, path.slice(0))
         // If we're at rest then remove the first path item since it'll be the
         // current tile. But if we're in the middle of a movement then don't
         // do anything.

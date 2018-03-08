@@ -1,15 +1,15 @@
 import 'phaser';
 import BootScene from './scenes/BootScene';
-import MainScene from './scenes/MainScene';
 import GameController from './GameController'
+import Helper from './utils/Helper'
 
 class Waltonia extends Phaser.Game {
   constructor() {
     let config = {
       type: Phaser.CANVAS,
       parent: 'content',
-      width: 400,
-      height: 400,
+      width: 500,
+      height: 500,
       backgroundColor: '#2d2d2d',
       pixelArt: true,
       physics: {
@@ -21,10 +21,9 @@ class Waltonia extends Phaser.Game {
     }
     super(config)
 
-    this.controller = new GameController({sceneManager: this.scene})
-    let mainScene = new MainScene({map: {name: 'waltonia', type: 'over', level: 0}, controller: this.controller})
-    this.controller.sceneName = mainScene.getKey()
-    this.scene.add(mainScene.getKey(), mainScene, true)
+    this.helper = new Helper()
+    this.controller = new GameController({sceneManager: this.scene, game: this})
+    this.controller.changeLevel('waltonia', 'over', 0)
   }
 
   boot() {
@@ -39,6 +38,7 @@ class Waltonia extends Phaser.Game {
       }, 5000)
     },5000)*/
   }
+
 }
 
 export default Waltonia;

@@ -3,7 +3,7 @@ import Mob from '../objects/Mob'
 import Movement from '../utils/Movement'
 import _ from 'underscore';
 import easystarjs from 'easystarjs';
-
+import EventEmitter from 'eventemitter3';
 
 class MainScene extends Phaser.Scene {
   constructor(config) {
@@ -14,6 +14,11 @@ class MainScene extends Phaser.Scene {
     this.easystar = null
     this.mapConfig = map
     this.controller = config.controller
+    this.events = new EventEmitter()
+  }
+
+  on(eventName, callback) {
+    this.events.on(eventName, callback)
   }
 
   getKey() {
@@ -113,7 +118,7 @@ class MainScene extends Phaser.Scene {
     }
     this.easystar.setGrid(mapData)
     let acceptableTiles = []
-    for (var i=0;i<1000;i++) { acceptableTiles.push(i) }
+    for (var i=0;i<10000;i++) { acceptableTiles.push(i) }
     acceptableTiles = acceptableTiles.filter( function( i ) {
       // For some reason we are offset by index 1 when we get the tile index. Compensating here.
       return !map.layers[0].collideIndexes.includes( ""+(i-1) );
@@ -131,6 +136,7 @@ class MainScene extends Phaser.Scene {
     this.initEasystar();
     this.initPlayer();
     this.initInput();
+    this.events.emit("create")
 
     // Set up the player to collide with the tilemap layer. Alternatively, you can manually run
     // collisions in update via: this.physics.world.collide(player, layer).
