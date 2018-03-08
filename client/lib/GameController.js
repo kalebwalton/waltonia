@@ -75,15 +75,19 @@ class GameController {
         delete this.mobs[id]
       }
     }
-    // destroy the main scene, all players and mobs
     if (this.getMainScene()) {
-      this.getMainScene().destroy()
+      this.sceneManager.stop(this.sceneName)
     }
 
-    // create the new scene
+    // create or activate the target scene
     let mainScene = new MainScene({map: {name, type, level}, controller: this})
+    if (this.sceneManager.getScene(mainScene.getKey())) {
+      this.sceneManager.stop(this.sceneName)
+      this.sceneManager.start(mainScene.getKey())
+    } else {
+      this.sceneManager.add(mainScene.getKey(), mainScene, true)
+    }
     this.sceneName = mainScene.getKey()
-    this.sceneManager.add(mainScene.getKey(), mainScene, true)
 
     // add any existing players
     mainScene.on('create', () => {

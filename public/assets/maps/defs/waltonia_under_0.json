@@ -27,6 +27,18 @@
                  "width":20,
                  "x":400,
                  "y":940
+                }, 
+                {
+                 "gid":1203,
+                 "height":20,
+                 "id":5,
+                 "name":"waltonia_over_0",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":20,
+                 "x":980,
+                 "y":500
                 }],
          "opacity":0.5,
          "type":"objectgroup",
@@ -34,7 +46,7 @@
          "x":0,
          "y":0
         }],
- "nextobjectid":5,
+ "nextobjectid":6,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.1.2",
