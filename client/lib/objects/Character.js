@@ -11,7 +11,7 @@ class Character extends Phaser.GameObjects.Sprite {
     this.moving = false
     this.following = null
     this.followedBy = null
-    this.movementDuration = 50
+    this.movementDuration = 150
 
     scene.physics.world.enable(this)
     this.setOrigin(0,0)

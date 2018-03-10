@@ -8,10 +8,12 @@ class Waltonia extends Phaser.Game {
     let config = {
       type: Phaser.CANVAS,
       parent: 'content',
-      width: 500,
-      height: 500,
+      // Need to make the following divisible by 20 to match the tiles or else we get some weird choppiness
+      width: 2 * Math.round(Math.floor(window.innerWidth * window.devicePixelRatio/2) / 2),
+      height: 2 * Math.round(Math.floor(window.innerHeight * window.devicePixelRatio/2) / 2)-4,
       backgroundColor: '#2d2d2d',
       pixelArt: true,
+      zoom: 2,
       physics: {
           default: 'arcade',
           arcade: {

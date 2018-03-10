@@ -141,7 +141,8 @@ class GameController {
         this.changeLevel(name, type, level)
       })
     }
-    this.getMainScene().cameras.main.startFollow(this.player, false);
+    console.log(this.getMainScene().cameras.main)
+    this.getMainScene().cameras.main.startFollow(this.player, true);
     for (var id in data.players) {
       if (id != data.player.id) {
         this.onOtherEnter(data.players[id])
