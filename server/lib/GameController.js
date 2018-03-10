@@ -52,6 +52,7 @@ class GameController {
   }
 
   getPlayer(socket) {
+    console.log(socket.id)
     return this.socketIdToPlayer[socket.id]
   }
 

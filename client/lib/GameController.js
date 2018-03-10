@@ -16,8 +16,12 @@ class GameController {
     this.players = {}
     this.mobs = {}
 
-    var socket = this.socket
+    this.initSocketEvents()
 
+  }
+
+  initSocketEvents() {
+    var socket = this.socket
     socket.on('moveTo', (player) => {
       console.debug("moveTo: ", player)
       this.onMoveTo(player)
@@ -46,7 +50,6 @@ class GameController {
   }
 
   getMainScene() {
-    // return this.scene
     return this.sceneManager.getAt(this.sceneManager.getIndex(this.sceneName))
   }
 
@@ -99,32 +102,43 @@ class GameController {
 
   }
 
-  doPlayerEnter(playerId) {
-    this.socket.emit('enter', playerId)
-    console.log("===PLAYER ENTER "+playerId+"===")
-  }
 
-  doPlayerMoveTo(tile) {
-    this.socket.emit('moveTo', {x: tile.x, y: tile.y})
-  }
 
-  onDisconnect() {
-    if (this.player) {
-      this.player.destroy()
-    }
-  }
 
-  onOtherExit(player) {
-    if (this.players[player.id]) {
-      console.debug("Destroying ", this.players[player.id])
-      this.players[player.id].destroy()
-      delete this.players[player.id]
-    }
-  }
+  // CHARACTER CREATION
 
   createPlayer(scene, id, tile) {
-    return new Player({id, scene, tile});
+    var player = new Player({id, scene, tile});
+    player.on('moveStart', this.onCharacterMoveStart.bind(this))
+    player.on('moveComplete', this.onCharacterMoveComplete.bind(this))
+    player.on('moveComplete', this.onPlayerMoveComplete.bind(this))
+    return player
   }
+
+  createOtherPlayer(scene, id, tile) {
+    var otherPlayer = new Player({id, scene, tile});
+    otherPlayer.on('moveStart', this.onCharacterMoveStart.bind(this))
+    otherPlayer.on('moveComplete', this.onCharacterMoveComplete.bind(this))
+    otherPlayer.on('pointerdown', (pointer) => {
+      this.onCharacterClick(otherPlayer)
+    });
+    return otherPlayer
+  }
+
+  createMob(id, tile) {
+    var mob = new Mob({id: id, scene: this.getMainScene(), tile});
+    mob.on('moveStart', this.onCharacterMoveStart.bind(this))
+    mob.on('moveComplete', this.onCharacterMoveComplete.bind(this))
+    mob.on('pointerdown', (pointer) => {
+      this.onCharacterClick(mob)
+    });
+    return mob
+  }
+
+
+
+
+  // SOCKET EVENT HANDLING
 
   onEnter(data) {
     // Loop until a scene exists and is ready
@@ -137,14 +151,10 @@ class GameController {
     if (!this.player) {
       var tile = this.getMainScene().movement.getTileAt(data.player.tile.x, data.player.tile.y)
       this.player = this.createPlayer(this.getMainScene(), data.player.id, tile)
-      this.player.on('enterPortal', (name, type, level) => {
-        this.changeLevel(name, type, level)
-      })
     }
-    console.log(this.getMainScene().cameras.main)
     this.getMainScene().cameras.main.startFollow(this.player, true);
     for (var id in data.players) {
-      if (id != data.player.id) {
+      if (id != this.player.id) {
         this.onOtherEnter(data.players[id])
       }
     }
@@ -153,10 +163,7 @@ class GameController {
   onOtherEnter(player) {
     if (!this.players[player.id]) {
       var tile = this.getMainScene().movement.getTileAt(player.tile.x, player.tile.y)
-      this.players[player.id] = new Player({id: player.id, scene: this.getMainScene(), tile});
-      this.players[player.id].on('pointerdown', (pointer) => {
-        this.onMobOrOtherPlayerClick(this.players[player.id])
-      });
+      this.players[player.id] = this.createOtherPlayer(this.getMainScene(), player.id, tile);
     }
   }
 
@@ -192,7 +199,7 @@ class GameController {
         if (this.getMainScene()) {
           var tile = this.getMainScene().movement.getTileAt(mob.tile.x, mob.tile.y)
           if (tile) {
-            this.newMob(mob.id, tile)
+            this.mobs[mob.id] = this.createMob(mob.id, tile)
           } else {
             console.warn("Mob spawned on an invalid tile", this.mobs[mob.id])
           }
@@ -201,22 +208,75 @@ class GameController {
     }
   }
 
-  onMobOrOtherPlayerClick(mobOrOtherPlayer) {
-    this.player.follow(mobOrOtherPlayer)
-    if (this.notFollowTimeout) {
-      clearTimeout(this.notFollowTimeout)
-      this.notFollowTimeout = null
+  onDisconnect() {
+    if (this.player) {
+      this.player.destroy()
     }
   }
 
-  newMob(id, tile) {
-    var mob = new Mob({id: id, scene: this.getMainScene(), tile});
-    mob.on('pointerdown', (pointer) => {
-      this.onMobOrOtherPlayerClick(mob)
-    });
-
-    this.mobs[mob.id] = mob
+  onOtherExit(player) {
+    if (this.players[player.id]) {
+      console.debug("Destroying ", this.players[player.id])
+      this.players[player.id].destroy()
+      delete this.players[player.id]
+    }
   }
+
+
+
+  // PLAYER SOCKET EVENT EMITTERS
+
+  doPlayerEnter(playerId) {
+    this.socket.emit('enter', playerId)
+    console.log("===PLAYER ENTER "+playerId+"===")
+  }
+
+  doPlayerMoveTo(tile) {
+    this.socket.emit('moveTo', {x: tile.x, y: tile.y})
+  }
+
+
+
+
+  // CHARACTER EVENT HANDLING
+
+  handlePlayerTileActions(toTile) {
+    var layerObjects = this.game.helper.getLayerObjectsAtTile(this.getMainScene().map, toTile.x, toTile.y)
+    if (layerObjects) {
+      for (var lo of layerObjects) {
+        switch(lo.objectLayerName) {
+          case 'portals':
+            var parts = lo.layerObject.name.split("_")
+            this.changeLevel(parts[0], parts[1], parts[2])
+          default:
+            break
+        }
+      }
+    }
+  }
+
+  onCharacterMoveStart(character, fromTile) {
+    this.getMainScene().easystar.stopAvoidingAdditionalPoint(fromTile.x, fromTile.y)
+  }
+
+  onCharacterMoveComplete(character, toTile) {
+    this.getMainScene().easystar.avoidAdditionalPoint(toTile.x, toTile.y)
+  }
+
+  onPlayerMoveComplete(player, toTile) {
+    this.handlePlayerTileActions(toTile)
+  }
+
+  onCharacterClick(character) {
+    if (character != this.player) {
+      this.player.follow(character)
+      if (this.getMainScene().notFollowTimeout) {
+        clearTimeout(this.getMainScene().notFollowTimeout)
+        this.getMainScene().notFollowTimeout = null
+      }
+    }
+  }
+
 
 }
 export default GameController

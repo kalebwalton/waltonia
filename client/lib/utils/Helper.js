@@ -30,5 +30,6 @@ class Helper {
     }
     return this.layerObjectsCache[key][this._getLayerObjectCacheCoordsKey(tileX, tileY)]
   }
+
 }
 export default Helper

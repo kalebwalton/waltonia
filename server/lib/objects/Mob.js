@@ -2,7 +2,7 @@ import Character from './Character'
 class Mob extends Character {
   constructor(config) {
     super(config)
-    this.bounds = {from: {x: 100, y:110}, range: {x:15, y:15}}
+    this.bounds = {from: {x: 10, y:10}, range: {x:5, y:5}}
   }
 
   randomMoveTo() {

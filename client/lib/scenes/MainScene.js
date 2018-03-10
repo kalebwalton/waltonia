@@ -1,3 +1,4 @@
+import Character from '../objects/Character'
 import Player from '../objects/Player'
 import Mob from '../objects/Mob'
 import Movement from '../utils/Movement'
@@ -76,11 +77,6 @@ class MainScene extends Phaser.Scene {
     this.controller.doPlayerEnter(playerId)
   }
 
-  initCamera(player) {
-//    this.cameras.main.zoom = 2;
-    this.cameras.main.startFollow(player, false);
-  }
-
   initInput() {
     this.input.on('pointerdown', _.throttle(pointer => {
       var tile = this.movement.getTileAtPointer(pointer)
@@ -124,7 +120,15 @@ class MainScene extends Phaser.Scene {
       return !map.layers[0].collideIndexes.includes( ""+(i-1) );
     } );
     this.easystar.setAcceptableTiles(acceptableTiles);
-    console.log("ACCEPTAB", acceptableTiles, "GREID", mapData)
+  }
+
+  isCharacterAtTile(tile, ignoreCharacter) {
+    for (var obj of this.children.getAll()) {
+      if (obj != ignoreCharacter && obj instanceof Character && obj.tile == tile) {
+        console.log("Character at tile", tile)
+        return true
+      }
+    }
   }
 
   create()
