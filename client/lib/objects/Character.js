@@ -11,7 +11,7 @@ class Character extends Phaser.GameObjects.Sprite {
     this.moving = false
     this.following = null
     this.followedBy = null
-    this.movementDuration = 150
+    this.movementDuration = 100
     this.texture = texture
 
     scene.physics.world.enable(this)
@@ -205,6 +205,7 @@ class Character extends Phaser.GameObjects.Sprite {
         this.moveToByPath.call(this, callback)
       },
       onStart: () => {
+        console.log("TILE COORDS", fromTile.x, fromTile.y,toTile.x, toTile.y )
         if (toTile.x < fromTile.x) {
           this.anims.play('left', true);
         } else if (toTile.x > fromTile.x) {

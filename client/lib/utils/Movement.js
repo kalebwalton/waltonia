@@ -10,7 +10,7 @@ class Movement {
   }
 
   getTileAtObject(object) {
-    return this.getTileAtWorldXY(object.body.x, object.body.y);
+    return this.getTileAtWorldXY(object.body.x+object.body.width/2, object.body.y+object.body.height/2);
   }
 
   getTileAtWorldXY(x, y) {
