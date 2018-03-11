@@ -1,6 +1,6 @@
 import Player from './objects/Player'
 import Mob from './objects/Mob'
-class MainScene {
+class MapScene {
   constructor() {
     this.players = {}
     this.mobs = {
@@ -44,4 +44,4 @@ class MainScene {
   }
 
 }
-export default MainScene
+export default MapScene

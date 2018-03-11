@@ -3,10 +3,10 @@ import babelify from 'express-babelify-middleware';
 import path from 'path';
 import http from 'http';
 import io_server from 'socket.io';
-import MainScene from './MainScene'
-import {selectPlayer, selectPlayers, selectTickState} from './selectors/index'
+import MapScene from './MapScene'
+import {selectPlayer, selectPlayers, selectTickState} from '../../shared/utils/Selectors'
 
-class GameController {
+class Controller {
 
   constructor(config) {
     this.scene = config.scene
@@ -117,4 +117,4 @@ class GameController {
 
 
 }
-export default GameController
+export default Controller

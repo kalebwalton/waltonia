@@ -1,12 +1,12 @@
-import Character from '../objects/Character'
-import Player from '../objects/Player'
-import Mob from '../objects/Mob'
-import Movement from '../utils/Movement'
+import Character from './objects/Character'
+import Player from './objects/Player'
+import Mob from './objects/Mob'
+import Movement from './utils/Movement'
 import _ from 'underscore';
 import easystarjs from 'easystarjs';
 import EventEmitter from 'eventemitter3';
 
-class MainScene extends Phaser.Scene {
+class MapScene extends Phaser.Scene {
   constructor(config) {
     var {map} = config
     var key = map.name+"_"+map.type+"_"+map.level
@@ -171,4 +171,4 @@ class MainScene extends Phaser.Scene {
 
 }
 
-export default MainScene
+export default MapScene

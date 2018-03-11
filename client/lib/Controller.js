@@ -1,11 +1,11 @@
 import Player from './objects/Player'
 import Mob from './objects/Mob'
-import MainScene from './scenes/MainScene';
+import MapScene from './MapScene';
 
 import io from 'socket.io-client';
 import _ from 'underscore';
 
-class GameController {
+class Controller {
   constructor(config) {
     this.url = new URL(window.location.href);
     this.socket = io(this.url.protocol+"//"+this.url.hostname+":3000");
@@ -49,7 +49,7 @@ class GameController {
 
   }
 
-  getMainScene() {
+  getMapScene() {
     return this.sceneManager.getAt(this.sceneManager.getIndex(this.sceneName))
   }
 
@@ -59,7 +59,7 @@ class GameController {
     var playerId, playerTile, playerTileX, playerTileY
     if (this.player) {
       playerId = this.player.id
-      playerTile = this.getMainScene().movement.getTileAtObject(this.player)
+      playerTile = this.getMapScene().movement.getTileAtObject(this.player)
       playerTileX = playerTile.x
       playerTileY = playerTile.y
 
@@ -78,25 +78,25 @@ class GameController {
         delete this.mobs[id]
       }
     }
-    if (this.getMainScene()) {
+    if (this.getMapScene()) {
       this.sceneManager.stop(this.sceneName)
     }
 
     // create or activate the target scene
-    let mainScene = new MainScene({map: {name, type, level}, controller: this})
-    if (this.sceneManager.getScene(mainScene.getKey())) {
+    let mapScene = new MapScene({map: {name, type, level}, controller: this})
+    if (this.sceneManager.getScene(mapScene.getKey())) {
       this.sceneManager.stop(this.sceneName)
-      this.sceneManager.start(mainScene.getKey())
+      this.sceneManager.start(mapScene.getKey())
     } else {
-      this.sceneManager.add(mainScene.getKey(), mainScene, true)
+      this.sceneManager.add(mapScene.getKey(), mapScene, true)
     }
-    this.sceneName = mainScene.getKey()
+    this.sceneName = mapScene.getKey()
 
     // add any existing players
-    mainScene.on('create', () => {
+    mapScene.on('create', () => {
       if (playerId) {
-        var tile = mainScene.movement.getTileAt(playerTileX, playerTileY)
-        this.createPlayer(mainScene, playerId, tile)
+        var tile = mapScene.movement.getTileAt(playerTileX, playerTileY)
+        this.createPlayer(mapScene, playerId, tile)
       }
     })
 
@@ -126,7 +126,7 @@ class GameController {
   }
 
   createMob(id, tile) {
-    var mob = new Mob({id: id, scene: this.getMainScene(), tile});
+    var mob = new Mob({id: id, scene: this.getMapScene(), tile});
     mob.on('moveStart', this.onCharacterMoveStart.bind(this))
     mob.on('moveComplete', this.onCharacterMoveComplete.bind(this))
     mob.on('pointerdown', (pointer) => {
@@ -142,17 +142,17 @@ class GameController {
 
   onEnter(data) {
     // Loop until a scene exists and is ready
-    var scene = this.getMainScene()
+    var scene = this.getMapScene()
     if (!scene || !scene.movement) {
       setTimeout(() => { this.onEnter(data) }, 250)
       return
     }
 
     if (!this.player) {
-      var tile = this.getMainScene().movement.getTileAt(data.player.tile.x, data.player.tile.y)
-      this.player = this.createPlayer(this.getMainScene(), data.player.id, tile)
+      var tile = this.getMapScene().movement.getTileAt(data.player.tile.x, data.player.tile.y)
+      this.player = this.createPlayer(this.getMapScene(), data.player.id, tile)
     }
-    this.getMainScene().cameras.main.startFollow(this.player, true);
+    this.getMapScene().cameras.main.startFollow(this.player, true);
     for (var id in data.players) {
       if (id != this.player.id) {
         this.onOtherEnter(data.players[id])
@@ -162,8 +162,8 @@ class GameController {
 
   onOtherEnter(player) {
     if (!this.players[player.id]) {
-      var tile = this.getMainScene().movement.getTileAt(player.tile.x, player.tile.y)
-      this.players[player.id] = this.createOtherPlayer(this.getMainScene(), player.id, tile);
+      var tile = this.getMapScene().movement.getTileAt(player.tile.x, player.tile.y)
+      this.players[player.id] = this.createOtherPlayer(this.getMapScene(), player.id, tile);
     }
   }
 
@@ -175,7 +175,7 @@ class GameController {
 
   onOtherMoveTo(id, x, y) {
     if (this.players[id]) {
-      var tile = this.getMainScene().movement.getTileAt(x,y)
+      var tile = this.getMapScene().movement.getTileAt(x,y)
       this.players[id].updateState({tile})
     }
   }
@@ -196,8 +196,8 @@ class GameController {
       if (this.mobs[mob.id]) {
         this.mobs[mob.id].updateState(mob)
       } else {
-        if (this.getMainScene()) {
-          var tile = this.getMainScene().movement.getTileAt(mob.tile.x, mob.tile.y)
+        if (this.getMapScene()) {
+          var tile = this.getMapScene().movement.getTileAt(mob.tile.x, mob.tile.y)
           if (tile) {
             this.mobs[mob.id] = this.createMob(mob.id, tile)
           } else {
@@ -241,7 +241,7 @@ class GameController {
   // CHARACTER EVENT HANDLING
 
   handlePlayerTileActions(toTile) {
-    var layerObjects = this.game.helper.getLayerObjectsAtTile(this.getMainScene().map, toTile.x, toTile.y)
+    var layerObjects = this.game.helper.getLayerObjectsAtTile(this.getMapScene().map, toTile.x, toTile.y)
     if (layerObjects) {
       for (var lo of layerObjects) {
         switch(lo.objectLayerName) {
@@ -256,11 +256,11 @@ class GameController {
   }
 
   onCharacterMoveStart(character, fromTile) {
-    this.getMainScene().easystar.stopAvoidingAdditionalPoint(fromTile.x, fromTile.y)
+    this.getMapScene().easystar.stopAvoidingAdditionalPoint(fromTile.x, fromTile.y)
   }
 
   onCharacterMoveComplete(character, toTile) {
-    this.getMainScene().easystar.avoidAdditionalPoint(toTile.x, toTile.y)
+    this.getMapScene().easystar.avoidAdditionalPoint(toTile.x, toTile.y)
   }
 
   onPlayerMoveComplete(player, toTile) {
@@ -270,13 +270,13 @@ class GameController {
   onCharacterClick(character) {
     if (character != this.player) {
       this.player.follow(character)
-      if (this.getMainScene().notFollowTimeout) {
-        clearTimeout(this.getMainScene().notFollowTimeout)
-        this.getMainScene().notFollowTimeout = null
+      if (this.getMapScene().notFollowTimeout) {
+        clearTimeout(this.getMapScene().notFollowTimeout)
+        this.getMapScene().notFollowTimeout = null
       }
     }
   }
 
 
 }
-export default GameController
+export default Controller

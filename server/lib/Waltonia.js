@@ -1,10 +1,10 @@
-import MainScene from './MainScene'
-import GameController from './GameController'
+import MapScene from './MapScene'
+import Controller from './Controller'
 
 class Waltonia {
   constructor(config) {
-    this.scene = new MainScene()
-    this.controller = new GameController({scene: this.scene})
+    this.scene = new MapScene()
+    this.controller = new Controller({scene: this.scene})
   }
 
 }
