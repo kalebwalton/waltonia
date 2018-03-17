@@ -36,7 +36,7 @@
         <key>dataFormat</key>
         <string>spritesheet-only</string>
         <key>textureFileName</key>
-        <filename></filename>
+        <filename>../tiles/combined/waltonia_underground.png</filename>
         <key>flipPVR</key>
         <false/>
         <key>pvrCompressionQuality</key>

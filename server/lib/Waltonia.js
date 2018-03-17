@@ -1,10 +1,15 @@
 import MapScene from './MapScene'
 import Controller from './Controller'
+import StoreManager from './store/index'
 
 class Waltonia {
   constructor(config) {
-    this.scene = new MapScene()
-    this.controller = new Controller({scene: this.scene})
+    new StoreManager(this.onStoreLoad)
+  }
+
+  onStoreLoad(store) {
+    this.store = store
+    this.controller = new Controller({store})
   }
 
 }
