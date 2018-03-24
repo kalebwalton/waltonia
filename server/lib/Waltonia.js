@@ -4,12 +4,17 @@ import StoreManager from './store/index'
 
 class Waltonia {
   constructor(config) {
-    new StoreManager(this.onStoreLoad)
+    this.testing = config.testing
+    this.storeManager = new StoreManager(this.onStoreLoad.bind(this), this.testing)
   }
 
   onStoreLoad(store) {
     this.store = store
-    this.controller = new Controller({store})
+    this.controller = new Controller({store, testing: this.testing})
+  }
+
+  destroy() {
+    this.controller.destroy()
   }
 
 }

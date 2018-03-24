@@ -3,22 +3,18 @@ import Mob from './objects/Mob'
 class MapScene {
   constructor() {
     this.players = {}
-    this.mobs = {
-      mob1: new Mob({id: 'mob1', scene: this, tile: {x: 110, y: 110}}),
-      mob2: new Mob({id: 'mob2', scene: this, tile: {x: 105, y: 105}})
-    }
   }
 
   getPlayer(id) {
     return this.players[id]
   }
 
-  generateId() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  }
+  // generateId() {
+  //   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  //     var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+  //     return v.toString(16);
+  //   });
+  // }
 
   newPlayer(id) {
     var id = id ? id : this.generateId()

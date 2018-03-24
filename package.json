@@ -25,6 +25,7 @@
     "express": "^4.16.2",
     "express-babelify-middleware": "^0.2.1",
     "express-browserify": "^1.0.2",
+    "mz": "^2.7.0",
     "phaser": "^3.2.0",
     "re-reselect": "^1.0.1",
     "reduce-reducers": "^0.1.2",
