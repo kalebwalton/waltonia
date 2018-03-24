@@ -1,5 +1,9 @@
 import reduceReducers from 'reduce-reducers'
-import { NEW_PLAYER, newPlayer, CLIENT_ERRORS_SENT, clientErrorsSent } from '../actions/'
+import {
+  NEW_PLAYER,
+  CLIENT_ERRORS_SENT,
+  ENTER_WORLD
+} from '../actions/'
 import { getPlayer } from '../selectors/'
 
 const playerReducer = (state = {}, action) => {
@@ -11,16 +15,16 @@ const playerReducer = (state = {}, action) => {
           ...state,
           players: [
             ...state.players,
-            { id: action.name, name: action.name }
+            { name: action.name }
           ]
         }
       } else {
-        var existingClientErrors = state.clientErrors[action.socketId]
+        var existingClientErrors = state.socketIdToClientErrors[action.socketId]
         if (!existingClientErrors) existingClientErrors = []
         return {
           ...state,
           clientErrors: {
-            ...state.clientErrors,
+            ...state.socketIdToClientErrors,
             [action.socketId]: [
               ...existingClientErrors,
               "PLAYER_NAME_TAKEN"
@@ -31,8 +35,8 @@ const playerReducer = (state = {}, action) => {
 
     case CLIENT_ERRORS_SENT:
       var nstate = {...state}
-      nstate.clientErrors = {...nstate.clientErrors}
-      delete nstate.clientErrors[action.socketId]
+      nstate.socketIdToClientErrors = {...nstate.socketIdToClientErrors}
+      delete nstate.socketIdToClientErrors[action.socketId]
       return nstate
 
     default:
@@ -40,6 +44,22 @@ const playerReducer = (state = {}, action) => {
   }
 }
 
+const socketIdToPlayerNameReducer = (state = {}, action) => {
+  switch(action.type) {
+    case ENTER_WORLD:
+      return {
+        ...state,
+        socketIdToPlayerName: {
+          ...state.socketIdToPlayerName,
+          [action.socketId]: action.name
+        }
+      }
+    default:
+      return {...state}
+  }
+}
+
 export default reduceReducers(
-  playerReducer
+  playerReducer,
+  socketIdToPlayerNameReducer
 )

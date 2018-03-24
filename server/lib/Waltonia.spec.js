@@ -20,7 +20,7 @@ describe('Waltonia', () => {
         expect(waltonia.store).to.not.be.undefined
         expect(waltonia.controller).to.not.be.undefined
         resolve()
-      }, 3000);
+      }, 1000);
     })
   }).timeout(5000)
 })

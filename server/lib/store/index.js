@@ -7,11 +7,13 @@ State Shape
 {
   players: [
     {
-      id: 'player1234',
       name: 'someplayer'
     }
   ],
-  clientErrors: {
+  socketIdToPlayerName: {
+    'socket1234': 'someplayer'
+  },
+  socketIdToClientErrors: {
     'socket1234': [
       'PLAYER_NAME_TAKEN'
     ]
@@ -19,10 +21,14 @@ State Shape
 }
 
 */
-
+var initialState = {
+  players: [],
+  socketIdToPlayerName: {},
+  socketIdToClientErrors: {}
+}
 export default class StoreManager {
   constructor(callback, mock = false) {
-    this.loadState((state) => {
+    this.loadState((state = initialState) => {
       callback(createStore(reducers, state))
     }, mock)
   }
@@ -35,7 +41,8 @@ export default class StoreManager {
           {id: '1', name: 'player1'},
           {id: '2', name: 'player2'}
         ],
-        clientErrors: []
+        socketIdToPlayerName: {},
+        socketIdToClientErrors: {}
       })
     } else {
       // FIXME implement

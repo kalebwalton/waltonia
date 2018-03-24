@@ -3,7 +3,7 @@ import babelify from 'express-babelify-middleware';
 import path from 'path';
 import http from 'http';
 import io_server from 'socket.io';
-import { newPlayer, clientErrorsSent} from './actions/'
+import { newPlayer, clientErrorsSent, enterWorld } from './actions/'
 import { getPlayer, getPlayers, getClientErrors, getClientTickState } from './selectors/'
 
 class Controller {
@@ -17,16 +17,14 @@ class Controller {
     this.socketByNewPlayerName = {}
 
     //this.scene = config.scene
-    //this.store = new Store()
     this.app = this.initApp()
     this.server = this.initServer()
     this.io = this.initIO()
     this.sockets = []
     this.socketByPlayerName = {}
     this.handlerMap = {
-      enterWorld: this.onEnterWorld//,
-
-      //moveTo: this.onMoveTo,
+      enterWorld: this.onEnterWorld,
+      moveTo: this.onMoveTo,
       //disconnect: this.onExit,
       //exit: this.onExit
     }
@@ -72,7 +70,7 @@ class Controller {
     this.app.use(express.static(path.join(__dirname, '../../public')));
     var port = process.env.PORT || 3000;
     server.listen(port, function () {
-      console.log('Server listening at port %d', port);
+      console.debug('Server listening at port %d', port);
     });
     return server
   }
@@ -97,6 +95,7 @@ class Controller {
       var clientErrors = getClientErrors(this.state(), socket.id)
       // Player has been created, we're good to send his info
       if (player) {
+        this.dispatch(enterWorld(player.name, socket.id))
         socket.emit('enterWorld', player)
         delete this.socketByNewPlayerName[name]
       } else if (clientErrors) {
@@ -121,6 +120,9 @@ class Controller {
   /*
     The client emits an 'enterWorld' event when entering the world, providing
     a username. If they don't provide a username we send an error back.
+
+    Data: { name: string }
+
   */
   onEnterWorld(e) {
     var {data, socket} = e
@@ -139,32 +141,12 @@ class Controller {
       this.dispatch(newPlayer(data['name'], socket.id))
     }
 
-    return
-
-    var {data, socket} = e
-    var playerId = data
-    var player = null
-    if (playerId) {
-      player = this.scene.getPlayer(playerId)
-    }
-    if (!player) {
-      player = this.scene.newPlayer(playerId)
-    }
-    console.log("enter", playerId, player)
-    this.setPlayer(socket, player)
-    player.enter()
-
-    socket.emit('enter', {
-      player: selectPlayer(player),
-      players: selectPlayers(this.scene.getEnteredPlayers())
-    });
-    socket.broadcast.emit('otherEnter', {
-      player: selectPlayer(player)
-    });
   }
 
-  // YOU ARE REFACTORING THE SERVER SIDE
+  /*
 
+  Data: { x: int, y: int }
+  */
   onMoveTo(e) {
     var {socket, data} = e
     let player = this.getPlayer(socket)

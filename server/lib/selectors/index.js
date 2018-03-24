@@ -12,7 +12,20 @@ export const getPlayer = createCachedSelector(
 )(
   (state, name) => "player_"+name
 );
-export const getClientErrors = (state, socketId) => state.clientErrors['socketId']
+
+const _getPlayerNameBySocketId = (playerNameBySocketId, socketId) => {
+  return players.find( e => e.socketId == socketId )
+}
+export const getPlayerName = createCachedSelector(
+  state => state,
+  (state, socketId) => name,
+  (state, socketId) => _getPlayerNameBySocketId(state.socketIdToPlayerName, socketId)
+)(
+  (state, socketId) => "player_"+socketId
+);
+
+
+export const getClientErrors = (state, socketId) => state.socketIdToClientErrors[socketId]
 
 export const getClientTickState = (state, name, socketId) => {
   var s = {
