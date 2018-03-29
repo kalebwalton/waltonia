@@ -1,4 +1,4 @@
-import { getPlayer, getPlayers } from './'
+import { getPlayerByName, getPlayers } from './'
 import {expect} from 'chai'
 import {check} from '../test/'
 import io from 'socket.io-client';
@@ -17,7 +17,7 @@ describe('Selectors', () => {
     expect(players).to.have.lengthOf(2)
   })
   it('should get player from state by name', () => {
-    var player = getPlayer(state, 'player1')
+    var player = getPlayerByName(state, 'player1')
     expect(player).to.have.property('name', 'player1')
   })
 })

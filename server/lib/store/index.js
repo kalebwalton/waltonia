@@ -5,18 +5,19 @@ import reducers from '../reducers'
 State Shape
 
 {
-  players: [
-    {
-      name: 'someplayer'
+  players: {
+    'someplayer': {
+      name: 'someplayer',
+      sourceTile: { x: 1, y: 1 },
+      currentTile: { x: 1, y: 2 },
+      targetTile: { x: 1, y: 3 }
     }
-  ],
-  socketIdToPlayerName: {
-    'socket1234': 'someplayer'
   },
-  socketIdToClientErrors: {
-    'socket1234': [
-      'PLAYER_NAME_TAKEN'
-    ]
+  clients: {
+    'someid': {
+      playername: 'someplayer',
+      errors: ['ERROR_1']
+    }
   }
 }
 

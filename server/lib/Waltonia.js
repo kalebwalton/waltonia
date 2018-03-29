@@ -1,4 +1,3 @@
-import MapScene from './MapScene'
 import Controller from './Controller'
 import StoreManager from './store/index'
 

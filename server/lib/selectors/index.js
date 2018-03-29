@@ -1,40 +1,32 @@
 import { createSelector } from 'reselect'
 import createCachedSelector from 're-reselect'
 
-export const getPlayers = state => state.players
-const _getPlayerByName = (players, name) => {
-  return players.find( e => e.name == name )
+// YOU ARE IN THE MIDDLE OF HEAVY REFACTORING OF ACTIONS AND STATE SHAPE... again
+
+
+export const getPlayers = state => Object.values(state.players)
+export const getPlayerByName = (state, name) => state.players[name]
+export const getPlayerBySocketId = (state, socketId) => state.players[getPlayerNameBySocketId(state, socketId)]
+export const getPlayerNameBySocketId = (state, socketId) => state.clients[socketId] ? state.clients[socketId].name : undefined
+export const getClients = state => Object.values(state.clients)
+export const getClientBySocketId = (state, socketId) => state.clients[socketId]
+export const getClientErrorsBySocketId = (state, socketId) => {
+  var client = getClientBySocketId(state, socketId)
+  if (client) {
+    return client.errors
+  }
 }
-export const getPlayer = createCachedSelector(
-  state => state,
-  (state, name) => name,
-  (state, name) => _getPlayerByName(getPlayers(state), name)
-)(
-  (state, name) => "player_"+name
-);
-
-const _getPlayerNameBySocketId = (playerNameBySocketId, socketId) => {
-  return players.find( e => e.socketId == socketId )
+export const hasClientErrors = (state, socketId) => {
+  var errors = getClientErrorsBySocketId(state, socketId)
+  return errors && errors.length > 0
 }
-export const getPlayerName = createCachedSelector(
-  state => state,
-  (state, socketId) => name,
-  (state, socketId) => _getPlayerNameBySocketId(state.socketIdToPlayerName, socketId)
-)(
-  (state, socketId) => "player_"+socketId
-);
-
-
-export const getClientErrors = (state, socketId) => state.socketIdToClientErrors[socketId]
-
-export const getClientTickState = (state, name, socketId) => {
+export const getClientTickState = (state, socketId) => {
   var s = {
-    player: getPlayer(state, name),
+    player: getPlayerBySocketId(state, socketId),
     players: getPlayers(state)
   }
   return s
 }
-
 
 
 export function selectTickState(state) {
