@@ -4,7 +4,7 @@ import path from 'path';
 import http from 'http';
 import io_server from 'socket.io';
 import { newPlayer, clientErrorsSent, authenticate, moveTo, disconnect} from './actions/'
-import { getPlayerByName, getPlayers, getClientErrors, getClientTickState } from './selectors/'
+import { getClientErrors, getClientTickState } from './selectors/'
 
 
 /*
@@ -54,21 +54,23 @@ class Controller {
 
   constructor(config) {
     this.tickInterval = 1000
-    this.testing = config.testing
-    this.store = config.store
     this.tickTimeout = null
 
-    //this.scene = config.scene
+    this.testing = config.testing
+    this.store = config.store
+
     this.app = this.initApp()
     this.server = this.initServer()
     this.io = this.initIO()
     this.sockets = {}
+
     this.handlerMap = {
       authenticate: this.onAuthenticate,
-      // enterWorld: this.onEnterWorld,
+      register: this.onRegister,
       moveTo: this.onMoveTo,
       disconnect: this.onDisconnect
     }
+
     this.io.on('connection', socket => {
       // Primarily so we can gracefully close all sockets when we destroy the controller
       this.sockets[socket.id] = socket
@@ -87,24 +89,37 @@ class Controller {
   }
 
   tick() {
-    var clientErrors = getAllClientErrors(this.state())
+    // Critical lifecycle event to update the state stored in this controller
+    // to reflect the new state in the store.
+    this.updateStateFromStore()
+    this.emitAllClientErrors()
+    this.emitClientTickState()
+
+    // FIXME put ticketInterval in the state
+    this.tickTimeout = setTimeout(this.tick.bind(this), this.tickInterval);
+  }
+
+  emitClientTickState() {
+    Object.keys(this.sockets).forEach(socketId => {
+      socket.emit('tick', getClientTickState(this.state, socket.id))
+    })
+  }
+
+  emitAllClientErrors() {
+    var clientErrors = getAllClientErrors(this.state)
     Object.keys(clientErrors).forEach(socketId => {
+      var clientErrors = getClientErrors(this.state, socketId)
       var socket = this.sockets[socketId]
       if (socket && clientErrors) {
         socket.emit('errors', clientErrors[socketId])
         this.dispatch(clientErrorsSent(socketId))
       }
     })
-
-    Object.keys(this.sockets).forEach(socketId => {
-      socket.emit('tick', getClientTickState(this.state(), socket.id))
-    })
-
-    this.tickTimeout = setTimeout(() => {
-      this.tick.bind(this)()
-    }, this.tickInterval);
   }
 
+  /*
+
+  */
   onAuthenticate(e) {
     var {data, socket} = e
     this.dispatch(authenticate(data.playername, data.password, socket.id))
@@ -128,6 +143,14 @@ class Controller {
   */
   onDisconnect(e) {
     this.dispatch(disconnect(e.socket.id))
+  }
+
+  /*
+  Player performed a registration action.
+  */
+  onRegister(e) {
+    var {data, socket} = e
+    this.dispatch(register(data.playername, data.password, data.email, socket.id))
   }
 
 
@@ -169,8 +192,8 @@ class Controller {
     return io_server(this.server);
   }
 
-  state() {
-    return this.store.getState()
+  updateStateFromStore() {
+    this.state = this.store.getState()
   }
   dispatch(action) {
     this.store.dispatch(action)

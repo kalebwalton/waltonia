@@ -6,23 +6,26 @@ import createCachedSelector from 're-reselect'
 
 export const getPlayers = state => Object.values(state.players)
 export const getPlayerByName = (state, name) => state.players[name]
-export const getPlayerBySocketId = (state, socketId) => state.players[getPlayerNameBySocketId(state, socketId)]
-export const getPlayerNameBySocketId = (state, socketId) => state.clients[socketId] ? state.clients[socketId].name : undefined
+export const getPlayer = (state, socketId) => {
+  return getPlayerByName(state, getPlayerNameBySocketId(state, socketId))
+}
+export const getPlayerNameBySocketId = (state, socketId) => {
+  var client = getClient(state, socketId)
+  return client ? client.playername : undefined
+}
 export const getClients = state => Object.values(state.clients)
-export const getClientBySocketId = (state, socketId) => state.clients[socketId]
-export const getClientErrorsBySocketId = (state, socketId) => {
-  var client = getClientBySocketId(state, socketId)
-  if (client) {
-    return client.errors
-  }
+export const getClient = (state, socketId) => state.clients[socketId]
+export const getClientErrors = (state, socketId) => {
+  var client = getClient(state, socketId)
+  return client ? client.errors : undefined
 }
 export const hasClientErrors = (state, socketId) => {
-  var errors = getClientErrorsBySocketId(state, socketId)
+  var errors = getClientErrors(state, socketId)
   return errors && errors.length > 0
 }
 export const getClientTickState = (state, socketId) => {
   var s = {
-    player: getPlayerBySocketId(state, socketId),
+    player: getPlayer(state, socketId),
     players: getPlayers(state)
   }
   return s

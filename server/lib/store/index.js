@@ -23,9 +23,8 @@ State Shape
 
 */
 var initialState = {
-  players: [],
-  socketIdToPlayerName: {},
-  socketIdToClientErrors: {}
+  players: {},
+  clients: {}
 }
 export default class StoreManager {
   constructor(callback, mock = false) {
