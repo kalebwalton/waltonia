@@ -156,7 +156,8 @@ class Controller {
   */
   onMoveTo(e) {
     var {socket, data} = e
-    this.dispatch(moveTo(socket.id, data.x, data.y))
+    console.log("Event: moveTo", socket.id, data)
+    this.dispatch(moveTo(data.x, data.y, socket.id))
   }
 
   /*

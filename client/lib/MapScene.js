@@ -73,8 +73,9 @@ class MapScene extends Phaser.Scene {
   }
 
   initPlayer() {
-    var playerId = this.url.searchParams.get("id");
-    this.controller.doPlayerEnter(playerId)
+    var playername = this.url.searchParams.get("name");
+    var password = this.url.searchParams.get("password")
+    this.controller.doAuthenticate(playername, password)
   }
 
   initInput() {

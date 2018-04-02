@@ -17,6 +17,7 @@ import {
   REG_PLAYER_ALREADY_EXISTS,
   MOVE_INVALID_TILE
 } from '../errors/'
+import {pn1, pn2, ps1, ps2, em1, em2, sid1, sid2, mockState} from './mock'
 import { getPlayerByName, getPlayer, getPlayerByNameAndPassword, getClient, hasClientErrors } from '../selectors/'
 
 const createClient = (socketId) => {
@@ -24,7 +25,7 @@ const createClient = (socketId) => {
 }
 
 const createPlayer = (playername, password, email, socketId) => {
-  return {name: playername, password, email, socketId}
+  return {name: playername, password, email, socketId, tile: {x:Math.floor(Math.random()*10+10),y:Math.floor(Math.random()*10+10)}}
 }
 
 const clientsReducer = (state = {}, action) => {
@@ -85,9 +86,9 @@ const clientsReducer = (state = {}, action) => {
             clients: {
               ...nstate.clients,
               [player.socketId]: {
-                ...nstate.clients[player.socketId],
+                ...client,
                 errors: [
-                  ...nstate.clients[player.socketId].errors,
+                  ...client.errors,
                   AUTH_ON_OTHER_DEVICE
                 ]
               }

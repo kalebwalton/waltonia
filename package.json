@@ -5,7 +5,7 @@
   "author": "niklas berg <me@niklasberg.se>",
   "main": "index.js",
   "scripts": {
-    "start": "babel-watch server/main.js",
+    "start": "babel-watch server/main.js --ignore '**/**/*.spec.js'",
     "test": "mocha --compilers js:babel-core/register server/lib/**/**.spec.js server/lib/*.spec.js"
   },
   "license": "MIT",

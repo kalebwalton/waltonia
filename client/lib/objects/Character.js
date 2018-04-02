@@ -92,12 +92,12 @@ class Character extends Phaser.GameObjects.Sprite {
   }
 
 
-  updateState({tile, followedBy, following}) {
+  updateState({targetTile, followedBy, following}) {
     // Handle movement state. Only do a moveTo if we're not already on our way to moving there.
-    if (tile !== undefined && (tile.x != this.tile.x || tile.y != this.tile.y)) {
+    if (targetTile !== undefined && (targetTile.x != this.tile.x || targetTile.y != this.tile.y)) {
       // Need to do getTileAt in case this is an update from the server which
       // won't be the actual tile reference. We use pixelX as a test.
-      var toTile = tile.pixelX ? tile : this.scene.movement.getTileAt(tile.x, tile.y)
+      var toTile = targetTile.pixelX ? targetTile : this.scene.movement.getTileAt(targetTile.x, targetTile.y)
       if (toTile) {
         console.debug("Moving character to tile", toTile)
         this.emit('moveStart', this, this.scene.movement.getTileAtObject(this))
@@ -105,7 +105,7 @@ class Character extends Phaser.GameObjects.Sprite {
           this.emit('moveComplete', this, toTile)
         })
       } else {
-        console.warn("Character moved to an invalid tile", this, tile)
+        console.warn("Character moved to an invalid tile", this, targetTile)
       }
     }
     if (following !== undefined) {

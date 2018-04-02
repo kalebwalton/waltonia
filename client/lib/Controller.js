@@ -22,29 +22,32 @@ class Controller {
 
   initSocketEvents() {
     var socket = this.socket
-    socket.on('moveTo', (player) => {
-      console.debug("moveTo: ", player)
-      this.onMoveTo(player)
+    // socket.on('moveTo', (player) => {
+    //   console.debug("moveTo: ", player)
+    //   this.onMoveTo(player)
+    // })
+    // socket.on('exit', () => {
+    //   console.debug("exit")
+    //   this.onExit()
+    // })
+    // socket.on('otherExit', (data) => {
+    //   console.debug("otherExit: ", data)
+    //   this.onOtherExit(data)
+    // })
+    // socket.on('enter', (data) => {
+    //   console.debug("enter: ", data)
+    //   this.onEnter(data)
+    // })
+    // socket.on('otherEnter', (data) => {
+    //   console.debug("otherEnter: ", data)
+    //   this.onOtherEnter(data.player)
+    // })
+    socket.on('tick', (state) => {
+      this.onTick(state)
     })
-    socket.on('exit', () => {
-      console.debug("exit")
-      this.onExit()
-    })
-    socket.on('otherExit', (data) => {
-      console.debug("otherExit: ", data)
-      this.onOtherExit(data)
-    })
-    socket.on('enter', (data) => {
-      console.debug("enter: ", data)
-      this.onEnter(data)
-    })
-    socket.on('otherEnter', (data) => {
-      console.debug("otherEnter: ", data)
-      this.onOtherEnter(data.player)
-    })
-    socket.on('tick', (data) => {
-      console.debug("tick: ", data)
-      this.onTick(data)
+
+    socket.on('error', (data) => {
+      this.onError(data)
     })
 
   }
@@ -140,73 +143,62 @@ class Controller {
 
   // SOCKET EVENT HANDLING
 
-  onEnter(data) {
-    // Loop until a scene exists and is ready
+  onTick(state) {
+    console.log(state)
     var scene = this.getMapScene()
-    if (!scene || !scene.movement) {
-      setTimeout(() => { this.onEnter(data) }, 250)
-      return
-    }
-
-    if (!this.player) {
-      var tile = this.getMapScene().movement.getTileAt(data.player.tile.x, data.player.tile.y)
-      this.player = this.createPlayer(this.getMapScene(), data.player.id, tile)
-    }
-    this.getMapScene().cameras.main.startFollow(this.player, true);
-    for (var id in data.players) {
-      if (id != this.player.id) {
-        this.onOtherEnter(data.players[id])
-      }
-    }
-  }
-
-  onOtherEnter(player) {
-    if (!this.players[player.id]) {
-      var tile = this.getMapScene().movement.getTileAt(player.tile.x, player.tile.y)
-      this.players[player.id] = this.createOtherPlayer(this.getMapScene(), player.id, tile);
-    }
-  }
-
-  onMoveTo(player) {
-    if (this.player) {
-      this.player.updateState({tile: player.tile})
-    }
-  }
-
-  onOtherMoveTo(id, x, y) {
-    if (this.players[id]) {
-      var tile = this.getMapScene().movement.getTileAt(x,y)
-      this.players[id].updateState({tile})
-    }
-  }
-
-  onTick(data) {
-    for (var playerId in data.players) {
-      var player = data.players[playerId]
-      if (this.player && player.id == this.player.id) {
-        this.player.updateState(player)
-      } else {
-        if (this.players[player.id]) {
-          this.players[player.id].updateState(player)
+    if (scene && scene.movement) {
+      if (state.player) {
+        // Handle new player creation
+        if (!this.player) {
+          var tile = this.getMapScene().movement.getTileAt(state.player.tile.x, state.player.tile.y)
+          this.player = this.createPlayer(this.getMapScene(), state.player.id, tile)
+          console.log("Creating player", this.player)
+          this.getMapScene().cameras.main.startFollow(this.player, true);
         }
+
+        this.player.updateState(state.player)
       }
-    }
-    for (var mobId in data.mobs) {
-      var mob = data.mobs[mobId]
-      if (this.mobs[mob.id]) {
-        this.mobs[mob.id].updateState(mob)
-      } else {
-        if (this.getMapScene()) {
-          var tile = this.getMapScene().movement.getTileAt(mob.tile.x, mob.tile.y)
-          if (tile) {
-            this.mobs[mob.id] = this.createMob(mob.id, tile)
-          } else {
-            console.warn("Mob spawned on an invalid tile", this.mobs[mob.id])
+
+      if (state.players) {
+        for (var id in state.players) {
+          var player = state.players[id]
+          if ((this.player && id != this.player.id) && !this.players[id]) {
+            var tile = this.getMapScene().movement.getTileAt(player.tile.x, player.tile.y)
+            this.players[id] = this.createOtherPlayer(this.getMapScene(), id, tile);
+          }
+          if (this.players[id]) {
+            this.players[id].updateState(player)
           }
         }
       }
+
+      // for (var mobId in data.mobs) {
+      //   var mob = data.mobs[mobId]
+      //   if (this.mobs[mob.id]) {
+      //     this.mobs[mob.id].updateState(mob)
+      //   } else {
+      //     if (this.getMapScene()) {
+      //       var tile = this.getMapScene().movement.getTileAt(mob.tile.x, mob.tile.y)
+      //       if (tile) {
+      //         this.mobs[mob.id] = this.createMob(mob.id, tile)
+      //       } else {
+      //         console.warn("Mob spawned on an invalid tile", this.mobs[mob.id])
+      //       }
+      //     }
+      //   }
+      // }
+
     }
   }
+
+  //
+  // onOtherMoveTo(id, x, y) {
+  //   if (this.players[id]) {
+  //     var tile = this.getMapScene().movement.getTileAt(x,y)
+  //     this.players[id].updateState({tile})
+  //   }
+  // }
+
 
   onDisconnect() {
     if (this.player) {
@@ -214,21 +206,23 @@ class Controller {
     }
   }
 
-  onOtherExit(player) {
-    if (this.players[player.id]) {
-      console.debug("Destroying ", this.players[player.id])
-      this.players[player.id].destroy()
-      delete this.players[player.id]
-    }
-  }
+  // FIXME handle exit
+  //
+  // onOtherExit(player) {
+  //   if (this.players[player.id]) {
+  //     console.debug("Destroying ", this.players[player.id])
+  //     this.players[player.id].destroy()
+  //     delete this.players[player.id]
+  //   }
+  // }
 
 
 
   // PLAYER SOCKET EVENT EMITTERS
 
-  doPlayerEnter(playerId) {
-    this.socket.emit('enter', playerId)
-    console.log("===PLAYER ENTER "+playerId+"===")
+  doAuthenticate(playername, password) {
+    this.socket.emit('authenticate', {playername, password})
+    console.log("===PLAYER ENTER "+playername+"===")
   }
 
   doPlayerMoveTo(tile) {
