@@ -22,28 +22,16 @@ State Shape
 }
 
 */
-var initialState = {
-  players: {},
-  clients: {}
-}
 export default class StoreManager {
-  constructor(callback, mock = false) {
-    this.loadState((state = initialState) => {
+  constructor(callback, initialState) {
+    this.loadState((state) => {
       callback(createStore(reducers, state))
-    }, mock)
+    }, initialState)
   }
 
-  loadState(callback, mock) {
-    if (mock) {
-      callback({
-        mock: true,
-        players: [
-          {id: '1', name: 'player1'},
-          {id: '2', name: 'player2'}
-        ],
-        socketIdToPlayerName: {},
-        socketIdToClientErrors: {}
-      })
+  loadState(callback, state) {
+    if (state) {
+      callback(state)
     } else {
       // FIXME implement
     }

@@ -8,7 +8,7 @@ import {fs} from "mz";
 describe('Waltonia', () => {
   var waltonia
   before(() => {
-    waltonia = new Waltonia({testing: true})
+    waltonia = new Waltonia()
   })
   after(() => {
     setTimeout(() => {waltonia.destroy()}, 1000)

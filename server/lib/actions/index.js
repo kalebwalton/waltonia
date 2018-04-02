@@ -23,3 +23,8 @@ export const MOVE_TO = "MOVE_TO"
 export const moveTo = (x, y, socketId) => {
   return {type: MOVE_TO, x, y, socketId}
 }
+
+export const GAME_START = "GAME_START"
+export const gameStart = () => {
+  return {type: GAME_START}
+}

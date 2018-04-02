@@ -4,8 +4,8 @@ import createCachedSelector from 're-reselect'
 // YOU ARE IN THE MIDDLE OF HEAVY REFACTORING OF ACTIONS AND STATE SHAPE... again
 
 
-export const getPlayers = state => Object.values(state.players)
-export const getPlayerByName = (state, name) => state.players[name]
+export const getPlayers = state => state.players
+export const getPlayerByName = (state, name) => getPlayers(state)[name]
 export const getPlayer = (state, socketId) => {
   return getPlayerByName(state, getPlayerNameBySocketId(state, socketId))
 }
@@ -13,8 +13,11 @@ export const getPlayerNameBySocketId = (state, socketId) => {
   var client = getClient(state, socketId)
   return client ? client.playername : undefined
 }
-export const getClients = state => Object.values(state.clients)
+export const getClients = state => state.clients
 export const getClient = (state, socketId) => state.clients[socketId]
+export const getAllClients = (state) => {
+  return getClients(state)
+}
 export const getClientErrors = (state, socketId) => {
   var client = getClient(state, socketId)
   return client ? client.errors : undefined
@@ -26,7 +29,8 @@ export const hasClientErrors = (state, socketId) => {
 export const getClientTickState = (state, socketId) => {
   var s = {
     player: getPlayer(state, socketId),
-    players: getPlayers(state)
+    players: getPlayers(state),
+    clients: getClients(state)
   }
   return s
 }

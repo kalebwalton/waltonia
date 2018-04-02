@@ -31,6 +31,7 @@ export const sid2='sid2'
 
 export const mockState = () => {
   return JSON.parse(JSON.stringify({
+    testing: true, // Use this in controller logic to make decisions around testing mode
     players:{
       [pn1]: {
         name: pn1,
@@ -147,14 +148,14 @@ describe('Reducers and actions', () => {
 
   describe('disconnect', () => {
     it('should remove client', () => {
-      var state = reducer({players:{}, clients:{'testsocketid': {name: 'testname', errors: []}}}, disconnect("testsocketid"))
+      state = reducer({players:{}, clients:{'testsocketid': {name: 'testname', errors: []}}}, disconnect("testsocketid"))
       expect(state.clients['testsocketid']).to.be.undefined
     })
   })
 
   describe('clientErrorsSent', () => {
     it('should clear client errors when sent', () => {
-      var state = reducer({players:{}, clients:{'testsocketid': {name:'testname', errors: [REG_BAD_REQUEST, AUTH_BAD_REQUEST]}}}, clientErrorsSent("testsocketid"))
+      state = reducer({players:{}, clients:{'testsocketid': {socketId: 'testsocketid', name:'testname', errors: [REG_BAD_REQUEST, AUTH_BAD_REQUEST]}}}, clientErrorsSent("testsocketid"))
       expect(state.clients['testsocketid'].errors).to.be.empty
     })
   })

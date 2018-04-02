@@ -4,7 +4,7 @@ import path from 'path';
 import http from 'http';
 import io_server from 'socket.io';
 import { newPlayer, clientErrorsSent, authenticate, moveTo, disconnect} from './actions/'
-import { getClientErrors, getClientTickState } from './selectors/'
+import { getClientErrors, getAllClients, getClientTickState } from './selectors/'
 
 
 /*
@@ -53,16 +53,32 @@ Error Handling
 class Controller {
 
   constructor(config) {
+    this.onStart = config.onStart
     this.tickInterval = 1000
     this.tickTimeout = null
-
-    this.testing = config.testing
+    this.sockets = {}
     this.store = config.store
 
+    // Wait for initial state to be in store before starting to tick
+    this.unsubscribe = this.store.subscribe(() => {
+      var first = !this.state
+      this.updateStateFromStore()
+
+      // Do this the first time
+      if (first) {
+        this.init()
+        if (this.onStart) {
+          this.onStart(this)
+        }
+      }
+
+    })
+  }
+
+  init() {
     this.app = this.initApp()
     this.server = this.initServer()
     this.io = this.initIO()
-    this.sockets = {}
 
     this.handlerMap = {
       authenticate: this.onAuthenticate,
@@ -91,7 +107,6 @@ class Controller {
   tick() {
     // Critical lifecycle event to update the state stored in this controller
     // to reflect the new state in the store.
-    this.updateStateFromStore()
     this.emitAllClientErrors()
     this.emitClientTickState()
 
@@ -101,18 +116,20 @@ class Controller {
 
   emitClientTickState() {
     Object.keys(this.sockets).forEach(socketId => {
-      socket.emit('tick', getClientTickState(this.state, socket.id))
+      this.sockets[socketId].emit('tick', getClientTickState(this.state, socketId))
     })
   }
 
   emitAllClientErrors() {
-    var clientErrors = getAllClientErrors(this.state)
-    Object.keys(clientErrors).forEach(socketId => {
-      var clientErrors = getClientErrors(this.state, socketId)
-      var socket = this.sockets[socketId]
-      if (socket && clientErrors) {
-        socket.emit('errors', clientErrors[socketId])
-        this.dispatch(clientErrorsSent(socketId))
+    var allClients = getAllClients(this.state)
+    Object.keys(allClients).forEach(socketId => {
+      var clientErrors = allClients[socketId].errors
+      if (clientErrors && clientErrors.length > 0) {
+        var socket = this.sockets[socketId]
+        if (socket && clientErrors) {
+          socket.emit('errors', clientErrors)
+          this.dispatch(clientErrorsSent(socketId))
+        }
       }
     })
   }
@@ -122,6 +139,10 @@ class Controller {
   */
   onAuthenticate(e) {
     var {data, socket} = e
+    if (!data) {
+      data = {}
+    }
+    console.log("Event: authenticate", socket.id, data)
     this.dispatch(authenticate(data.playername, data.password, socket.id))
   }
 
@@ -177,7 +198,7 @@ class Controller {
     var server = http.createServer(this.app);
     var phaserDir = path.dirname(require.resolve('phaser'))
     // This causes tests to hang
-    if (!this.testing) {
+    if (!this.state.testing) {
       this.app.get('/bundle.js', babelify('client/main.js', { watch: true, extensions: ['js'], ignore: ['phaser'] }, { presets: [ 'env' ]}));
     }
     this.app.use(express.static(path.join(__dirname, '../../public')));

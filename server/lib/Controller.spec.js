@@ -1,29 +1,30 @@
 import Controller from './Controller'
 import StoreManager from './store/'
-import {AUTH_BAD_REQUEST} from './errors/'
+import {AUTH_BAD_REQUEST, AUTH_PLAYER_DOES_NOT_EXIST} from './errors/'
 import {expect} from 'chai'
 import {check} from './test/'
+import {pn1, pn2, ps1, ps2, em1, em2, sid1, sid2, mockState} from './reducers/index.spec'
 import io from 'socket.io-client';
+import {gameStart} from './actions/'
+
 
 describe('Controller', () => {
   var controller, io_client
-  before(() => {
-    return new Promise((resolve) => {
-      new StoreManager((s) => {
-        controller = new Controller({store: s, testing: true})
-        resolve()
-      }, true)
-    });
-  })
-  after(() => {
-    controller.destroy()
-  })
   beforeEach(() => {
-    io_client = io("http://localhost:3000");
+    return new Promise((resolve) => {
+      new StoreManager((store) => {
+        controller = new Controller({store, onStart: () => {
+          resolve()
+          io_client = io("http://localhost:3000");
+        }})
+        controller.store.dispatch(gameStart())
+      }, mockState())
+    });
   })
   afterEach(() => {
     io_client.removeAllListeners()
     io_client.close()
+    controller.destroy()
   })
 
   it('should initialize the store and io', () => {
@@ -43,10 +44,10 @@ describe('Controller', () => {
       io_client.on('tick', (state) => {
         expect(state).to.not.be.undefined
         expect(state).to.have.property('player')
-        expect(state.player).to.have.property('name', 'player1')
+        expect(state.player).to.have.property('name', pn1)
         done()
       })
-      io_client.emit('authenticate', {playername: 'player1'})
+      io_client.emit('authenticate', {playername: pn1, password: ps1})
     })
     it('should return an error when authenticate with a name that doesn\'t yet exist', (done) => {
       io_client.on('errors', (state) => {
@@ -54,7 +55,7 @@ describe('Controller', () => {
         expect(state[0]).to.equal(AUTH_PLAYER_DOES_NOT_EXIST)
         done()
       })
-      io_client.emit('authenticate', {playername: 'nonexistingplayer'})
+      io_client.emit('authenticate', {playername: 'nonexistingplayer', password: 'bad'})
     })
     it('should tick with relevant server state to be reflected in the client', (done) => {
       io_client.on('tick', (state) => {
@@ -63,7 +64,7 @@ describe('Controller', () => {
         expect(state).to.have.property('player')
         done()
       })
-      io_client.emit('authenticate', {playername: 'player1'})
+      io_client.emit('authenticate', {playername: pn1, password: ps1})
     })
     /*it('should throw an error if trying to create a new player with a name that already exists', (done) => {
       io_client.on('enterWorld', (state) => {

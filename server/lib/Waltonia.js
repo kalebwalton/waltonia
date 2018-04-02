@@ -1,15 +1,16 @@
 import Controller from './Controller'
-import StoreManager from './store/index'
+import StoreManager from './store/'
+import {gameStart} from './actions/'
 
 class Waltonia {
-  constructor(config) {
-    this.testing = config.testing
-    this.storeManager = new StoreManager(this.onStoreLoad.bind(this), this.testing)
+  constructor(config, initialState) {
+    this.storeManager = new StoreManager(this.onStoreLoad.bind(this), initialState)
   }
 
   onStoreLoad(store) {
     this.store = store
-    this.controller = new Controller({store, testing: this.testing})
+    this.controller = new Controller({store})
+    this.store.dispatch(gameStart())
   }
 
   destroy() {

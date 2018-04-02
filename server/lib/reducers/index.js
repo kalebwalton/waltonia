@@ -5,7 +5,8 @@ import {
   REGISTER,
   AUTHENTICATE,
   DISCONNECT,
-  MOVE_TO
+  MOVE_TO,
+  GAME_START
 } from '../actions/'
 import {
   AUTH_BAD_REQUEST,
@@ -74,27 +75,28 @@ const clientsReducer = (state = {}, action) => {
       if (player) {
         if (player.password != password) {
           errors.push(AUTH_BAD_PASSWORD)
+          break
         }
+        // If the player has a socketId already and is getting a new one, then update
+        // the existing client to have errors.
         if (player.socketId && player.socketId != socketId) {
-          client = {
-            ...client,
-            errors:[
-              ...nstate.clients[player.socketId].errors,
-              AUTH_ON_OTHER_DEVICE
-            ]
-          }
-        } else {
-          client = {
-            ...nstate.clients[player.socketId],
-            errors:[]
+          nstate = {
+            ...nstate,
+            clients: {
+              ...nstate.clients,
+              [player.socketId]: {
+                ...nstate.clients[player.socketId],
+                errors: [
+                  ...nstate.clients[player.socketId].errors,
+                  AUTH_ON_OTHER_DEVICE
+                ]
+              }
+            }
           }
         }
-        nstate = {
-          ...nstate,
-          clients: {
-            ...nstate.clients,
-            [player.socketId]: client
-          }
+        client = {
+          ...client,
+          playername
         }
       } else {
         errors.push(AUTH_PLAYER_DOES_NOT_EXIST)
@@ -141,7 +143,8 @@ const clientsReducer = (state = {}, action) => {
 
 const playersReducer = (state = {}, action) => {
   var {socketId} = action
-  if (hasClientErrors(state, socketId)) {
+  // Handle this condition special for AUTHENTICATE actions because of AUTH_ON_OTHER_DEVICE
+  if (hasClientErrors(state, socketId) && action.type != AUTHENTICATE) {
     return {...state}
   }
 
@@ -193,18 +196,22 @@ const playersReducer = (state = {}, action) => {
         return {...state}
       }
 
-    case CLIENT_ERRORS_SENT:
-      var nstate = {...state}
-      nstate.socketIdToClientErrors = {...nstate.socketIdToClientErrors}
-      delete nstate.socketIdToClientErrors[action.socketId]
-      return nstate
+    default:
+      return {...state}
+  }
+}
 
+const gameReducer = (state = {}, action) => {
+  switch(action) {
+    case GAME_START:
+      return {...state}
     default:
       return {...state}
   }
 }
 
 export default reduceReducers(
+  gameReducer,
   clientsReducer,
   playersReducer
 )
