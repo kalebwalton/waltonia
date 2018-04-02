@@ -5,7 +5,7 @@ import Helper from './utils/Helper'
 class Waltonia extends Phaser.Game {
   constructor() {
     let config = {
-      type: Phaser.CANVAS,
+      type: Phaser.WEB_GL,
       parent: 'content',
       // Need to make the following divisible by 20 to match the tiles or else we get some weird choppiness
       width: 2 * Math.round(Math.floor(window.innerWidth * window.devicePixelRatio/2) / 3),
@@ -21,6 +21,8 @@ class Waltonia extends Phaser.Game {
       }
     }
     super(config)
+
+    this.tint = Math.random() * 0xffffff
 
     this.helper = new Helper()
     this.controller = new Controller({sceneManager: this.scene, game: this})

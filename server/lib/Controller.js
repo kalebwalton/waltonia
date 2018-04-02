@@ -54,7 +54,7 @@ class Controller {
 
   constructor(config) {
     this.onStart = config.onStart
-    this.tickInterval = 1000
+    this.tickInterval = 250
     this.tickTimeout = null
     this.sockets = {}
     this.store = config.store

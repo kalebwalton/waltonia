@@ -9,13 +9,14 @@ Events:
 
 */
 class Character extends Phaser.GameObjects.Sprite {
-  constructor({scene, id, tile, texture, frame, type}) {
+  constructor({scene, id, name, tile, texture, frame, type}) {
     texture = texture ? texture : 'character'
     frame = frame ? frame : 1
     super(scene, tile.pixelX, tile.pixelY, texture, frame)
 
     this.tile = tile
     this.id = id
+    this.name = name
     this.textureName = texture
 
     this.movementPath = []
@@ -23,6 +24,7 @@ class Character extends Phaser.GameObjects.Sprite {
     this.following = null
     this.followedBy = null
     this.movementDuration = 100
+    this.tint = Math.random() * 0xffffff
 
 
     this.initHighlight()
@@ -192,6 +194,7 @@ class Character extends Phaser.GameObjects.Sprite {
     var pathItem = this.movementPath[0]
     var toTile = this.scene.movement.getTileAt(pathItem.x, pathItem.y)
     var fromTile = this.scene.movement.getTileAtObject(this)
+    toTile.tint = Math.random() * 0xffffff
     this.scene.tweens.add({
       targets: [this, this.highlight],
       x: toTile.pixelX,// + this.body.offset.x,
@@ -201,6 +204,7 @@ class Character extends Phaser.GameObjects.Sprite {
       onComplete: () => {
         this.movementPath.shift()
         this.tile = toTile
+        this.tile.tint = 0xffffff
         this.moveToByPath.call(this, callback)
       },
       onStart: () => {

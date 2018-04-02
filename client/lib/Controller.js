@@ -21,6 +21,7 @@ class Controller {
   }
 
   initSocketEvents() {
+    console.log("Setting up socket")
     var socket = this.socket
     // socket.on('moveTo', (player) => {
     //   console.debug("moveTo: ", player)
@@ -110,16 +111,18 @@ class Controller {
 
   // CHARACTER CREATION
 
-  createPlayer(scene, id, tile) {
-    var player = new Player({id, scene, tile});
+  createPlayer(scene, id, name, tile) {
+    console.log("Creating player", id)
+    var player = new Player({id, name, scene, tile});
     player.on('moveStart', this.onCharacterMoveStart.bind(this))
     player.on('moveComplete', this.onCharacterMoveComplete.bind(this))
     player.on('moveComplete', this.onPlayerMoveComplete.bind(this))
     return player
   }
 
-  createOtherPlayer(scene, id, tile) {
-    var otherPlayer = new Player({id, scene, tile});
+  createOtherPlayer(scene, id, name, tile) {
+    console.log("Creating other player", id)
+    var otherPlayer = new Player({id, name, scene, tile});
     otherPlayer.on('moveStart', this.onCharacterMoveStart.bind(this))
     otherPlayer.on('moveComplete', this.onCharacterMoveComplete.bind(this))
     otherPlayer.on('pointerdown', (pointer) => {
@@ -144,15 +147,14 @@ class Controller {
   // SOCKET EVENT HANDLING
 
   onTick(state) {
-    console.log(state)
+    console.log("tick", state)
     var scene = this.getMapScene()
     if (scene && scene.movement) {
       if (state.player) {
         // Handle new player creation
         if (!this.player) {
           var tile = this.getMapScene().movement.getTileAt(state.player.tile.x, state.player.tile.y)
-          this.player = this.createPlayer(this.getMapScene(), state.player.id, tile)
-          console.log("Creating player", this.player)
+          this.player = this.createPlayer(this.getMapScene(), state.player.name, state.player.name, tile)
           this.getMapScene().cameras.main.startFollow(this.player, true);
         }
 
@@ -160,14 +162,15 @@ class Controller {
       }
 
       if (state.players) {
-        for (var id in state.players) {
-          var player = state.players[id]
-          if ((this.player && id != this.player.id) && !this.players[id]) {
+        for (var name in state.players) {
+          var player = state.players[name]
+          console.log(name, this.player)
+          if ((this.player && name != this.player.name) && !this.players[name]) {
             var tile = this.getMapScene().movement.getTileAt(player.tile.x, player.tile.y)
-            this.players[id] = this.createOtherPlayer(this.getMapScene(), id, tile);
+            this.players[name] = this.createOtherPlayer(this.getMapScene(), name, name, tile);
           }
-          if (this.players[id]) {
-            this.players[id].updateState(player)
+          if (this.players[name]) {
+            this.players[name].updateState(player)
           }
         }
       }
