@@ -4,7 +4,7 @@ import path from 'path';
 import http from 'http';
 import io_server from 'socket.io';
 import { newPlayer, clientErrorsSent, authenticate, moveTo, disconnect} from './actions/'
-import { getClientErrors, getAllClients, getClientTickState } from './selectors/'
+import { getClientErrors, getClients, getClientTickState } from './selectors/'
 
 
 /*
@@ -121,7 +121,7 @@ class Controller {
   }
 
   emitAllClientErrors() {
-    var allClients = getAllClients(this.state)
+    var allClients = getClients(this.state)
     Object.keys(allClients).forEach(socketId => {
       var clientErrors = allClients[socketId].errors
       if (clientErrors && clientErrors.length > 0) {

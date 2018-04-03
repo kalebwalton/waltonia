@@ -16,9 +16,10 @@ import {
   MOVE_INVALID_TILE
 } from '../errors/'
 import {
-  getPlayer
+  getPlayer, getPlayerByName
 } from '../selectors/'
 import {expect} from 'chai'
+import {pn1, pn2, ps1, ps2, em1, em2, sid1, sid2, pid1, pid2, mockState} from './mock'
 
 
 
@@ -31,9 +32,9 @@ describe('Reducers and actions', () => {
   describe('authenticate', () => {
     it('should succeed if valid username/password', () => {
       state = reducer(state, authenticate(pn1, ps1, sid1))
-      expect(state.players).to.have.property(pn1)
       expect(state.clients).to.have.property(sid1)
       expect(state.clients[sid1].errors).to.be.empty
+      expect(state.clients[sid1].playerId).to.equal(pid1)
     })
     it('should error if player doesn\'t exist', () => {
       var bsid = "badsocketid"
@@ -43,16 +44,17 @@ describe('Reducers and actions', () => {
     })
     it('should error if bad password', () => {
       state = reducer(state, authenticate(pn1, "badpass", sid1))
-      expect(state.players).to.have.property(pn1)
+      expect(state.players).to.have.property(pid1)
       expect(state.clients).to.have.property(sid1)
       expect(state.clients[sid1].errors[0]).to.equal(AUTH_BAD_PASSWORD)
     })
     it('should error on existing socketId if signing in new socketId (like new device)', () => {
       var nsid = "newdevicesocketid"
       state = reducer(state, authenticate(pn1, ps1, nsid))
-      expect(state.players).to.have.property(pn1)
+      expect(state.players).to.have.property(pid1)
       expect(state.clients).to.have.property(nsid)
       expect(state.clients[nsid].errors).to.be.empty
+      console.log(state)
       expect(state.clients[sid1].errors).to.not.be.empty
       expect(state.clients[sid1].errors[0]).to.equal(AUTH_ON_OTHER_DEVICE)
 
@@ -81,9 +83,10 @@ describe('Reducers and actions', () => {
       var sid = 'testsid'
       var pn = 'testplayer'
       state = reducer(state, register(pn, "testpass", "email@email.com", sid))
+      console.log(state)
       expect(state.clients[sid].errors).to.be.empty
-      expect(state.clients[sid]).to.have.property('playername', pn)
-      expect(state.players).to.have.property(pn)
+      var player = getPlayerByName(state, pn)
+      expect(player).to.have.property('name', pn)
     })
   })
 

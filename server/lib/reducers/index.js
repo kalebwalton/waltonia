@@ -18,103 +18,139 @@ import {
   MOVE_INVALID_TILE
 } from '../errors/'
 import {pn1, pn2, ps1, ps2, em1, em2, sid1, sid2, mockState} from './mock'
-import { getPlayerByName, getPlayer, getPlayerByNameAndPassword, getClient, hasClientErrors } from '../selectors/'
+import { getPlayerById, getPlayer, getPlayerByIdAndPassword, getClient, hasClientErrors, getClientByPlayerId, getPlayerByName} from '../selectors/'
 
 const createClient = (socketId) => {
   return {socketId, errors:[]}
 }
 
 const createPlayer = (playername, password, email, socketId) => {
-  return {name: playername, password, email, socketId, tile: {x:Math.floor(Math.random()*10+10),y:Math.floor(Math.random()*10+10)}}
+  return {id: Math.floor(Math.random()*10000), name: playername, password, email, socketId, tile: {x:Math.floor(Math.random()*10+10),y:Math.floor(Math.random()*10+10)}}
 }
 
-const clientsReducer = (state = {}, action) => {
+const insertClient = (state, newClient) => {
+  var existingClient = getClient(state, newClient.socketId)
+  return {
+    ...state,
+    clients: {
+      ...state.clients,
+      [newClient.socketId]: {
+        ...existingClient,
+        ...newClient
+      }
+    }
+  }
+}
+
+const insertClientError = (state, socketId, error) => {
+  var client = getClient(state, socketId)
+  return {
+    ...state,
+    clients: {
+      [socketId]: {
+        ...client,
+        errors: [
+          ...client.errors,
+          error
+        ]
+      }
+    }
+  }
+}
+
+const insertPlayer = (state, newPlayer) => {
+  var existingPlayer = getPlayer(state, newPlayer.id)
+  return {
+    ...state,
+    players: {
+      ...state.players,
+      [newPlayer.id]: {
+        ...existingPlayer,
+        ...newPlayer
+      }
+    }
+  }
+}
+
+const playerInteractionReducer = (state = {}, action) => {
   var nstate = {...state}
   var {socketId} = action
 
   // We always need a valid client
-  var client, errors
+  var client
   if (socketId) {
-    client = getClient(state, socketId)
+    client = getClient(nstate, socketId)
     if (!client) {
       client = createClient(socketId)
-      nstate = {
-        ...nstate,
-        clients: {
-          ...nstate.clients,
-          [socketId]: client
-        }
-      }
+      nstate = insertClient(nstate, client)
     }
-    errors = [...client.errors]
   }
 
   switch(action.type) {
     case REGISTER:
       var {playername, password, email} = action
       if (!playername || !password || !email) {
-        errors.push(REG_BAD_REQUEST)
+        nstate = insertClientError(nstate, socketId, REG_BAD_REQUEST)
+        break
       }
-      var player = getPlayerByName(state, playername)
+      var player = getPlayerByName(nstate, playername)
       if (player) {
-        errors.push(REG_PLAYER_ALREADY_EXISTS)
+        nstate = insertClientError(nstate, socketId, REG_PLAYER_ALREADY_EXISTS)
+        break
       } else {
-        client = {
-          ...client,
-          playername
-        }
+        var player = createPlayer(playername, password, email)
+        nstate = insertPlayer(nstate, player)
       }
-
       break
 
     case AUTHENTICATE:
       var {playername, password, socketId} = action
       if (!playername || !password) {
-        errors.push(AUTH_BAD_REQUEST)
+        nstate = insertClientError(nstate, socketId, AUTH_BAD_REQUEST)
+        break
       }
-      var player = getPlayerByName(state, playername)
+      var player = getPlayerByName(nstate, playername)
       if (player) {
         if (player.password != password) {
-          errors.push(AUTH_BAD_PASSWORD)
+          nstate = insertClientError(nstate, socketId, AUTH_BAD_PASSWORD)
           break
         }
         // If the player has a socketId already and is getting a new one, then update
         // the existing client to have errors.
-        if (player.socketId && player.socketId != socketId) {
-          nstate = {
-            ...nstate,
-            clients: {
-              ...nstate.clients,
-              [player.socketId]: {
-                ...client,
-                errors: [
-                  ...client.errors,
-                  AUTH_ON_OTHER_DEVICE
-                ]
-              }
-            }
-          }
+        var playerClient = getClientByPlayerId(nstate, player.id)
+        if (playerClient) {
+          nstate = insertClientError(nstate, playerClient.socketId, AUTH_ON_OTHER_DEVICE)
         }
-        client = {
+        nstate = insertClient(nstate, {
           ...client,
-          playername
-        }
+          playerId: player.id
+        })
       } else {
-        errors.push(AUTH_PLAYER_DOES_NOT_EXIST)
+        nstate = insertClientError(nstate, socketId, AUTH_PLAYER_DOES_NOT_EXIST)
       }
       break
 
     case MOVE_TO:
       var {x,y} = action
       if (x<0 || y<0) {
-        errors.push(MOVE_INVALID_TILE)
+        nstate = insertClientError(nstate, socketId, MOVE_INVALID_TILE)
+        break
+      }
+      // This is where we want to do some target tile validation
+      var player = getPlayer(nstate, socketId)
+      if (player) {
+        nstate = insertPlayer(nstate, {
+          ...player,
+          targetTile: {x,y}
+        })
       }
       break
 
     case CLIENT_ERRORS_SENT:
-      // Just clear the errors completely so the fall through
-      // logic will create a new client with no errors
-      errors = []
+      nstate = insertClient(nstate, {
+        ...client,
+        errors: []
+      })
       break
 
     case DISCONNECT:
@@ -122,84 +158,15 @@ const clientsReducer = (state = {}, action) => {
         ...nstate.clients
       }
       delete nclients[socketId]
-      return {
+      nstate = {
         ...nstate,
         clients: nclients
       }
 
     default:
-      return {...nstate}
+      break
   }
-  return {
-    ...nstate,
-    clients: {
-      ...nstate.clients,
-      [socketId]: {
-        ...client,
-        errors
-      }
-    }
-  }
-}
-
-const playersReducer = (state = {}, action) => {
-  var {socketId} = action
-  // Handle this condition special for AUTHENTICATE actions because of AUTH_ON_OTHER_DEVICE
-  if (hasClientErrors(state, socketId) && action.type != AUTHENTICATE) {
-    return {...state}
-  }
-
-  switch(action.type) {
-    case REGISTER:
-      var {playername, password, email} = action
-      return {
-        ...state,
-        players: {
-          ...state.players,
-          [playername]: createPlayer(playername, password, email, socketId)
-        }
-      }
-
-    case AUTHENTICATE:
-      var {playername, password} = action
-      var player = getPlayerByName(state, playername)
-      if (player) {
-        return {
-          ...state,
-          players: {
-            ...state.players,
-            [playername]: {
-              ...player,
-              socketId
-            }
-          }
-        }
-      } else {
-        return {...state}
-      }
-
-    case MOVE_TO:
-      var {x,y} = action
-      // This is where we want to do some target tile validation
-      var player = getPlayer(state, socketId)
-      if (player) {
-        return {
-          ...state,
-          players: {
-            ...state.players,
-            [player.name]: {
-              ...player,
-              targetTile: {x, y}
-            }
-          }
-        }
-      } else {
-        return {...state}
-      }
-
-    default:
-      return {...state}
-  }
+  return nstate
 }
 
 const gameReducer = (state = {}, action) => {
@@ -213,6 +180,5 @@ const gameReducer = (state = {}, action) => {
 
 export default reduceReducers(
   gameReducer,
-  clientsReducer,
-  playersReducer
+  playerInteractionReducer
 )

@@ -17,7 +17,7 @@ describe('Selectors', () => {
   //   expect(players).to.have.lengthOf(2)
   // })
   // it('should get player from state by name', () => {
-  //   var player = getPlayerByName(state, 'player1')
+  //   var player = getPlayerById(state, 'player1')
   //   expect(player).to.have.property('name', 'player1')
   // })
 })

@@ -1,22 +1,32 @@
 import { createSelector } from 'reselect'
 import createCachedSelector from 're-reselect'
 
-// YOU ARE IN THE MIDDLE OF HEAVY REFACTORING OF ACTIONS AND STATE SHAPE... again
+// YOU ARE IN THE MIDDLE OF ADDING AN 'id' TO THE PLAYER
 
 
 export const getPlayers = state => state.players
-export const getPlayerByName = (state, name) => getPlayers(state)[name]
-export const getPlayer = (state, socketId) => {
-  return getPlayerByName(state, getPlayerNameBySocketId(state, socketId))
+export const getPlayerById = (state, id) => getPlayers(state)[id]
+export const getPlayerByName = (state, name) => {
+  var players = getPlayers(state)
+  for (var player of Object.values(players)) {
+    if (player.name == name) {
+      return player
+    }
+  }
 }
-export const getPlayerNameBySocketId = (state, socketId) => {
+export const getPlayer = (state, socketId) => {
   var client = getClient(state, socketId)
-  return client ? client.playername : undefined
+  return client && client.playerId ? getPlayerById(state, client.playerId) : undefined
 }
 export const getClients = state => state.clients
-export const getClient = (state, socketId) => state.clients[socketId]
-export const getAllClients = (state) => {
-  return getClients(state)
+export const getClient = (state, socketId) => getClients(state)[socketId]
+export const getClientByPlayerId = (state, playerId) => {
+  var clients = getClients(state)
+  for (var client of Object.values(clients)) {
+    if (client.playerId == playerId) {
+      return client
+    }
+  }
 }
 export const getClientErrors = (state, socketId) => {
   var client = getClient(state, socketId)

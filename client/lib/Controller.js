@@ -154,7 +154,7 @@ class Controller {
         // Handle new player creation
         if (!this.player) {
           var tile = this.getMapScene().movement.getTileAt(state.player.tile.x, state.player.tile.y)
-          this.player = this.createPlayer(this.getMapScene(), state.player.name, state.player.name, tile)
+          this.player = this.createPlayer(this.getMapScene(), state.player.id, state.player.name, tile)
           this.getMapScene().cameras.main.startFollow(this.player, true);
         }
 
@@ -162,15 +162,14 @@ class Controller {
       }
 
       if (state.players) {
-        for (var name in state.players) {
-          var player = state.players[name]
-          console.log(name, this.player)
-          if ((this.player && name != this.player.name) && !this.players[name]) {
+        for (var id in state.players) {
+          var player = state.players[id]
+          if ((this.player && id != this.player.id) && !this.players[id]) {
             var tile = this.getMapScene().movement.getTileAt(player.tile.x, player.tile.y)
-            this.players[name] = this.createOtherPlayer(this.getMapScene(), name, name, tile);
+            this.players[id] = this.createOtherPlayer(this.getMapScene(), player.id, player.name, tile);
           }
-          if (this.players[name]) {
-            this.players[name].updateState(player)
+          if (this.players[id]) {
+            this.players[id].updateState(player)
           }
         }
       }
