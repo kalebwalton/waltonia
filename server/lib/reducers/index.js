@@ -6,7 +6,8 @@ import {
   AUTHENTICATE,
   DISCONNECT,
   MOVE_TO,
-  GAME_START
+  GAME_START,
+  MAPS_LOAD
 } from '../actions/'
 import {
   AUTH_BAD_REQUEST,
@@ -178,7 +179,18 @@ const gameReducer = (state = {}, action) => {
   }
 }
 
+const mapsReducer = (state = {}, action) => {
+  switch(action.type) {
+    case MAPS_LOAD:
+      var {maps} = action
+      return {...state, maps}
+    default:
+      return {...state}
+  }
+}
+
 export default reduceReducers(
   gameReducer,
-  playerInteractionReducer
+  playerInteractionReducer,
+  mapsReducer
 )

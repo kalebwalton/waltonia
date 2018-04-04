@@ -53,17 +53,8 @@
  "tileheight":20,
  "tilesets":[
         {
-         "columns":48,
          "firstgid":1,
-         "image":"..\/tiles\/combined\/waltonia_under.png",
-         "imageheight":800,
-         "imagewidth":960,
-         "margin":0,
-         "name":"map",
-         "spacing":0,
-         "tilecount":1920,
-         "tileheight":20,
-         "tilewidth":20
+         "source":"..\/tilesets\/under.json"
         }],
  "tilewidth":20,
  "type":"map",

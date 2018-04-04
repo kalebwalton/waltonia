@@ -58,6 +58,7 @@ class Controller {
   }
 
   changeLevel(name, type, level) {
+
     // capture details about the player so we can recreate him
     // FIXME figure out a better way to do this
     var playerId, playerTile, playerTileX, playerTileY
@@ -100,7 +101,7 @@ class Controller {
     mapScene.on('create', () => {
       if (playerId) {
         var tile = mapScene.movement.getTileAt(playerTileX, playerTileY)
-        this.createPlayer(mapScene, playerId, tile)
+        this.player = this.createFirstPlayer(mapScene, playerId, tile)
       }
     })
 
@@ -111,22 +112,24 @@ class Controller {
 
   // CHARACTER CREATION
 
-  createPlayer(scene, id, name, tile) {
-    console.log("Creating player", id)
-    var player = new Player({id, name, scene, tile});
+  createPlayer(scene, id, name, tile, cameraFollow) {
+    console.log("Creating player", id, name, tile, cameraFollow)
+    var player = new Player({id, name, scene, tile, cameraFollow});
     player.on('moveStart', this.onCharacterMoveStart.bind(this))
     player.on('moveComplete', this.onCharacterMoveComplete.bind(this))
-    player.on('moveComplete', this.onPlayerMoveComplete.bind(this))
+    return player
+  }
+
+  createFirstPlayer(scene, id, name, tile, cameraFollow) {
+    var player = this.createPlayer(scene, id, name, tile, true)
+    player.on('moveComplete', this.onFirstPlayerMoveComplete.bind(this))
     return player
   }
 
   createOtherPlayer(scene, id, name, tile) {
-    console.log("Creating other player", id)
-    var otherPlayer = new Player({id, name, scene, tile});
-    otherPlayer.on('moveStart', this.onCharacterMoveStart.bind(this))
-    otherPlayer.on('moveComplete', this.onCharacterMoveComplete.bind(this))
-    otherPlayer.on('pointerdown', (pointer) => {
-      this.onCharacterClick(otherPlayer)
+    var player = this.createPlayer(scene, id, name, tile, false)
+    player.on('pointerdown', (pointer) => {
+      this.onCharacterClick(player)
     });
     return otherPlayer
   }
@@ -141,9 +144,6 @@ class Controller {
     return mob
   }
 
-
-
-
   // SOCKET EVENT HANDLING
 
   onTick(state) {
@@ -154,8 +154,8 @@ class Controller {
         // Handle new player creation
         if (!this.player) {
           var tile = this.getMapScene().movement.getTileAt(state.player.tile.x, state.player.tile.y)
-          this.player = this.createPlayer(this.getMapScene(), state.player.id, state.player.name, tile)
-          this.getMapScene().cameras.main.startFollow(this.player, true);
+          this.player = this.createFirstPlayer(this.getMapScene(), state.player.id, state.player.name, tile)
+          this.getMapScene();
         }
 
         this.player.updateState(state.player)
@@ -232,8 +232,6 @@ class Controller {
   }
 
 
-
-
   // CHARACTER EVENT HANDLING
 
   handlePlayerTileActions(toTile) {
@@ -259,7 +257,7 @@ class Controller {
     this.getMapScene().easystar.avoidAdditionalPoint(toTile.x, toTile.y)
   }
 
-  onPlayerMoveComplete(player, toTile) {
+  onFirstPlayerMoveComplete(player, toTile) {
     this.handlePlayerTileActions(toTile)
   }
 

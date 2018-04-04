@@ -3,7 +3,7 @@ import babelify from 'express-babelify-middleware';
 import path from 'path';
 import http from 'http';
 import io_server from 'socket.io';
-import { newPlayer, clientErrorsSent, authenticate, moveTo, disconnect} from './actions/'
+import { newPlayer, clientErrorsSent, authenticate, moveTo, disconnect, mapsRequest} from './actions/'
 import { getClientErrors, getClients, getClientTickState } from './selectors/'
 
 
@@ -100,6 +100,8 @@ class Controller {
         })
       }
     });
+
+    this.dispatch(mapsRequest())
 
     this.tick()
   }

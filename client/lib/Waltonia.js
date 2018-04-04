@@ -22,8 +22,6 @@ class Waltonia extends Phaser.Game {
     }
     super(config)
 
-    this.tint = Math.random() * 0xffffff
-
     this.helper = new Helper()
     this.controller = new Controller({sceneManager: this.scene, game: this})
     this.controller.changeLevel('waltonia', 'over', 0)

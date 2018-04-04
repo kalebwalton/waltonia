@@ -5,6 +5,7 @@ import {
   CLIENT_ERRORS_SENT, clientErrorsSent,
   DISCONNECT, disconnect,
   MOVE_TO, moveTo,
+  MAPS_LOAD, mapsLoad, mapsRequest
 } from '../actions/'
 import {
   AUTH_PLAYER_DOES_NOT_EXIST,
@@ -13,10 +14,10 @@ import {
   AUTH_ON_OTHER_DEVICE,
   REG_PLAYER_ALREADY_EXISTS,
   REG_BAD_REQUEST,
-  MOVE_INVALID_TILE
+  MOVE_INVALID_TILE,
 } from '../errors/'
 import {
-  getPlayer, getPlayerByName
+  getPlayer, getPlayerByName, getTileType, getMap
 } from '../selectors/'
 import {expect} from 'chai'
 import {pn1, pn2, ps1, ps2, em1, em2, sid1, sid2, pid1, pid2, mockState} from './mock'
@@ -54,7 +55,6 @@ describe('Reducers and actions', () => {
       expect(state.players).to.have.property(pid1)
       expect(state.clients).to.have.property(nsid)
       expect(state.clients[nsid].errors).to.be.empty
-      console.log(state)
       expect(state.clients[sid1].errors).to.not.be.empty
       expect(state.clients[sid1].errors[0]).to.equal(AUTH_ON_OTHER_DEVICE)
 
@@ -83,7 +83,6 @@ describe('Reducers and actions', () => {
       var sid = 'testsid'
       var pn = 'testplayer'
       state = reducer(state, register(pn, "testpass", "email@email.com", sid))
-      console.log(state)
       expect(state.clients[sid].errors).to.be.empty
       var player = getPlayerByName(state, pn)
       expect(player).to.have.property('name', pn)
@@ -121,6 +120,28 @@ describe('Reducers and actions', () => {
     it('should clear client errors when sent', () => {
       state = reducer({players:{}, clients:{'testsocketid': {socketId: 'testsocketid', name:'testname', errors: [REG_BAD_REQUEST, AUTH_BAD_REQUEST]}}}, clientErrorsSent("testsocketid"))
       expect(state.clients['testsocketid'].errors).to.be.empty
+    })
+  })
+
+  describe('mapsRequest', () => {
+    it('should load maps', () => {
+      mapsRequest()(action => {
+        var {maps} = action
+        state = reducer(state, mapsLoad(maps))
+        expect(state.maps).to.not.be.empty
+        expect(state.maps[0].layers).to.not.be.empty
+      })
+    })
+
+    it('should support loading tile types', () => {
+      mapsRequest()(action => {
+        var {maps} = action
+        state = reducer(state, mapsLoad(maps))
+        expect(state.maps).to.not.be.empty
+        var map = getMap(state, 'waltonia_over_0')
+        expect(map.layers).to.not.be.empty
+        console.log(getTileType(state, map.id, 'map', 1, 1))
+      })
     })
   })
   // describe('clientErrorsSent', () => {

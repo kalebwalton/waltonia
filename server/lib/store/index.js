@@ -1,5 +1,6 @@
-import { createStore } from 'redux'
+import { createStore, applyMiddleware } from 'redux'
 import reducers from '../reducers'
+import thunk from 'redux-thunk';
 
 /*
 State Shape
@@ -25,7 +26,7 @@ State Shape
 export default class StoreManager {
   constructor(callback, initialState) {
     this.loadState((state) => {
-      callback(createStore(reducers, state))
+      callback(createStore(reducers, state, applyMiddleware(thunk)))
     }, initialState)
   }
 

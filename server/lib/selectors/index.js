@@ -44,6 +44,55 @@ export const getClientTickState = (state, socketId) => {
   return s
 }
 
+export const getMaps = state => state.maps
+export const getMap = (state, mapId) => {
+  var maps = getMaps(state)
+  if (maps) {
+    for (var map of maps) {
+      if (map.id == mapId) {
+        return map
+      }
+    }
+  }
+}
+export const getLayer = (state, mapId, name) => {
+  var map = getMap(state, mapId)
+  if (map && map.layers) {
+    console.log("LAYER", mapId, name, map.layers)
+    for (var layer of map.layers) {
+      if (layer.name == name) {
+        return layer
+      }
+    }
+  }
+}
+export const getTileset = (state, mapId, name) => {
+  var map = getMap(state, mapId)
+  if (map && map.tilesets) {
+    for (var tileset of map.tilesets) {
+      if (tileset.name == name) {
+        return tileset
+      }
+    }
+  }
+}
+// YOU'RE WORKING ON GETTING TILE TYPE
+export const getTileType = (state, mapId, layerName, x, y) => {
+  var layer = getLayer(state, mapId, layerName)
+  console.log("layer", layer)
+  if (layer) {
+    var tileset = getTileset(state, mapId, layer.name)
+    if (tileset) {
+      var tileGid = layer.data[(y*layer.width)+x]
+      console.log("TILEGID", tileGid)
+      var tile = tileset.tiles[tileGid]
+      if (tile) {
+        return tile.type
+      }
+    }
+  }
+}
+
 
 export function selectTickState(state) {
   return {
