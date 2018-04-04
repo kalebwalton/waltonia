@@ -1,3 +1,7 @@
+var Promise = require('bluebird'),
+    globAsync = Promise.promisify(require("glob")),
+    fs = Promise.promisifyAll(require("fs"));
+
 export const REGISTER = "REGISTER"
 export const register = (playername, password, email, socketId) => {
   return { type: REGISTER, playername, password, email, socketId }
@@ -30,9 +34,24 @@ export const gameStart = () => {
 }
 
 export const MAPS_LOAD = "MAPS_LOAD"
+export const mapsLoad = (maps) => {
+  return {type: MAPS_LOAD, maps}
+}
+
+export const TILESETS_LOAD = "TILESETS_LOAD"
+export const tilesetsLoad = (tilesets) => {
+  return {type: TILESETS_LOAD, tilesets}
+}
+
 export const mapsRequest = () => {
+  return mapOrTileSetRequest(`${__dirname}/../../../public/assets/maps/defs/!(_)*.json`, mapsLoad)
+}
+export const tilesetsRequest = () => {
+  return mapOrTileSetRequest(`${__dirname}/../../../public/assets/maps/tilesets/!(_)*.json`, tilesetsLoad)
+}
+export const mapOrTileSetRequest = (globPattern, loadFn) => {
   return (dispatch) => {
-    return globAsync(`${__dirname}/../../../public/assets/maps/defs/{!(_*),(*.json)}`).catch(function(err) {
+    return globAsync(globPattern).catch(function(err) {
           throw new Error("Error to read json files: " + err);
     }).map(function(file) {
         return fs.readFileAsync(file, 'utf8').then((data) => {
@@ -43,19 +62,8 @@ export const mapsRequest = () => {
             throw new Error("Error to read config ("+file+")" + err);
         });
     }).then(
-      maps => dispatch(mapsLoad(maps)),
+      maps => dispatch(loadFn(maps)),
       error => console.log(error)
     )
   }
-}
-export const mapsLoad = (maps) => {
-  return {type: MAPS_LOAD, maps}
-}
-
-var Promise = require('bluebird'),
-    globAsync = Promise.promisify(require("glob")),
-    fs = Promise.promisifyAll(require("fs"));
-
-export const fetchMaps = () => {
-
 }

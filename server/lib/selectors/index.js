@@ -58,7 +58,6 @@ export const getMap = (state, mapId) => {
 export const getLayer = (state, mapId, name) => {
   var map = getMap(state, mapId)
   if (map && map.layers) {
-    console.log("LAYER", mapId, name, map.layers)
     for (var layer of map.layers) {
       if (layer.name == name) {
         return layer
@@ -66,28 +65,30 @@ export const getLayer = (state, mapId, name) => {
     }
   }
 }
-export const getTileset = (state, mapId, name) => {
-  var map = getMap(state, mapId)
-  if (map && map.tilesets) {
-    for (var tileset of map.tilesets) {
-      if (tileset.name == name) {
+export const getTilesets = (state) => state.tilesets
+export const getTileset = (state, id) => {
+  var tilesets = getTilesets(state)
+  if (tilesets) {
+    for (var tileset of tilesets) {
+      if (tileset.id == id) {
         return tileset
       }
     }
   }
 }
-// YOU'RE WORKING ON GETTING TILE TYPE
 export const getTileType = (state, mapId, layerName, x, y) => {
-  var layer = getLayer(state, mapId, layerName)
-  console.log("layer", layer)
-  if (layer) {
-    var tileset = getTileset(state, mapId, layer.name)
-    if (tileset) {
-      var tileGid = layer.data[(y*layer.width)+x]
-      console.log("TILEGID", tileGid)
-      var tile = tileset.tiles[tileGid]
-      if (tile) {
-        return tile.type
+  var map = getMap(state, mapId)
+  if (map) {
+    var layer = getLayer(state, mapId, layerName)
+    if (layer) {
+      var tilesetId = map.tilesets[0].source.substring(map.tilesets[0].source.lastIndexOf('/')+1).split(".")[0]
+      var tileset = getTileset(state, tilesetId)
+      if (tileset) {
+        var tileGid = layer.data[(y*layer.width)+x]
+        var tile = tileset.tiles[tileGid]
+        if (tile) {
+          return tile.type
+        }
       }
     }
   }

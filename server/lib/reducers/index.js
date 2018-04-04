@@ -7,7 +7,8 @@ import {
   DISCONNECT,
   MOVE_TO,
   GAME_START,
-  MAPS_LOAD
+  MAPS_LOAD,
+  TILESETS_LOAD
 } from '../actions/'
 import {
   AUTH_BAD_REQUEST,
@@ -189,8 +190,19 @@ const mapsReducer = (state = {}, action) => {
   }
 }
 
+const tilesetsReducer = (state = {}, action) => {
+  switch(action.type) {
+    case TILESETS_LOAD:
+      var {tilesets} = action
+      return {...state, tilesets}
+    default:
+      return {...state}
+  }
+}
+
 export default reduceReducers(
   gameReducer,
   playerInteractionReducer,
-  mapsReducer
+  mapsReducer,
+  tilesetsReducer
 )

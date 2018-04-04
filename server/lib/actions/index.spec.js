@@ -1,4 +1,4 @@
-import {mapsRequest} from './'
+import {mapsRequest, tilesetsRequest} from './'
 import {expect} from 'chai'
 
 describe('Fetchmaps', () => {
@@ -8,6 +8,13 @@ describe('Fetchmaps', () => {
       expect(maps).to.not.be.empty
       expect(maps[0].id).to.not.be.empty
       expect(maps[0].layers).to.not.be.empty
+    })
+  })
+  it('should fetch tilesets', () => {
+    tilesetsRequest()(action => {
+      var tilesets = action.tilesets
+      expect(tilesets).to.not.be.empty
+      expect(tilesets[0].id).to.not.be.empty
     })
   })
 })

@@ -5,7 +5,8 @@ import {
   CLIENT_ERRORS_SENT, clientErrorsSent,
   DISCONNECT, disconnect,
   MOVE_TO, moveTo,
-  MAPS_LOAD, mapsLoad, mapsRequest
+  MAPS_LOAD, mapsLoad, mapsRequest,
+  TILESETS_LOAD, tilesetsLoad, tilesetsRequest
 } from '../actions/'
 import {
   AUTH_PLAYER_DOES_NOT_EXIST,
@@ -134,13 +135,18 @@ describe('Reducers and actions', () => {
     })
 
     it('should support loading tile types', () => {
-      mapsRequest()(action => {
-        var {maps} = action
-        state = reducer(state, mapsLoad(maps))
-        expect(state.maps).to.not.be.empty
-        var map = getMap(state, 'waltonia_over_0')
-        expect(map.layers).to.not.be.empty
-        console.log(getTileType(state, map.id, 'map', 1, 1))
+      mapsRequest()(mapsAction => {
+        tilesetsRequest()(tilesetsAction => {
+          var {maps} = mapsAction
+          var {tilesets} = tilesetsAction
+          state = reducer(state, mapsLoad(maps))
+          state = reducer(state, tilesetsLoad(tilesets))
+          expect(state.maps).to.not.be.empty
+          var map = getMap(state, 'test_over_0')
+          expect(map.layers).to.not.be.empty
+          expect(getTileType(state, map.id, 'map', 0, 1)).to.equal('block')
+          expect(getTileType(state, map.id, 'map', 1, 1)).to.equal('walk')
+        })
       })
     })
   })
