@@ -134,9 +134,12 @@ const playerInteractionReducer = (state = {}, action) => {
         // the existing client to have errors, and also remove its' playerId
         var playerClient = getClientByPlayerId(nstate, player.id)
         if (playerClient) {
-          nstate = insertClientError(nstate, playerClient.socketId, AUTH_ON_OTHER_DEVICE)
           nstate = insertClient(nstate, {
             ...playerClient,
+            errors: [
+              ...playerClient.errors,
+              AUTH_ON_OTHER_DEVICE
+            ],
             playerId: undefined
           })
         }
