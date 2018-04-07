@@ -8,9 +8,9 @@ describe('StoreManager', () => {
       new StoreManager((store) => {
         check(done, () => {
           expect(store).to.not.be.undefined
-          expect(store.getState()).to.have.property('mock')
+          expect(store.getState()).to.have.property('testing')
         })
-      }, true)
+      }, {"testing": true})
     })
   })
 })

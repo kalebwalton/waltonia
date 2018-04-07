@@ -1,8 +1,7 @@
 import { createSelector } from 'reselect'
 import createCachedSelector from 're-reselect'
 
-// YOU ARE IN THE MIDDLE OF ADDING AN 'id' TO THE PLAYER
-
+export const getPlayerMovements = (state) => state.movements.players
 
 export const getPlayers = state => state.players
 export const getPlayerById = (state, id) => getPlayers(state)[id]
@@ -44,6 +43,8 @@ export const getClientTickState = (state, socketId) => {
   return s
 }
 
+
+
 export const getMapsMeta = state => state.mapsMeta
 export const getMapMeta = (state, mapId) => {
   var mapsMeta = getMapsMeta(state)
@@ -62,7 +63,6 @@ export const getMap = (state, mapId) => {
     }
   }
 }
-
 export const getLayer = (state, mapId, name) => {
   var map = getMap(state, mapId)
   if (map && map.layers) {

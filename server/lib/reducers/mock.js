@@ -8,14 +8,8 @@ export const em1='em1'
 export const em2='em2'
 export const sid1='sid1'
 export const sid2='sid2'
-export const mid1='waltonia_over_0'
-export const mn1='waltonia'
-export const mt1='over'
-export const ml1=0
-export const mid2='waltonia_under_0'
-export const mn2='waltonia'
-export const mt2='under'
-export const ml2=0
+export const mid1='test_over_0'
+export const mid2='test_under_0'
 
 export const mockState = (testing = true) => {
   return JSON.parse(JSON.stringify({
@@ -26,7 +20,7 @@ export const mockState = (testing = true) => {
         name: pn1,
         password: ps1,
         email: em1,
-        tile: { x: 10, y:10 },
+        tile: { x: 1, y:1 },
         mapId: mid1
       },
       [pid2]: {
@@ -34,7 +28,7 @@ export const mockState = (testing = true) => {
         name: pn2,
         password: ps2,
         email: em2,
-        tile: { x: 11, y:11 },
+        tile: { x: 1, y:2 },
         mapId: mid2
       }
     },

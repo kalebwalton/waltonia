@@ -4,7 +4,8 @@ import {
   AUTHENTICATE, authenticate,
   CLIENT_ERRORS_SENT, clientErrorsSent,
   DISCONNECT, disconnect,
-  REQUEST_MOVE_TO, requestMoveTo,
+  REQUEST_MOVE_TO_TARGET_TILE, requestMoveToTargetTile,
+  MOVE_TO_TILE, moveToTile,
   MAPS_LOAD, mapsLoad, mapsRequest,
   TILESETS_LOAD, tilesetsLoad, tilesetsRequest
 } from '../actions/'
@@ -91,24 +92,35 @@ describe('Reducers and actions', () => {
     })
   })
 
-  describe('move to', () => {
+  describe('request move to target tile', () => {
     it('should error on invalid tile', () => {
-      state = reducer(state, requestMoveTo(-1, 1, sid1))
+      state = reducer(state, requestMoveToTargetTile(-1, 1, sid1))
       expect(state.clients[sid1].errors).to.not.be.empty
       expect(state.clients[sid1].errors[0]).to.equal(MOVE_INVALID_TILE)
     })
     it('should create or update players movement queue on valid tile', () => {
       //var oldState = {players:{'testname':{name:'testname', password:'testpass', targetTile: {x:1, y:1}}}, clients:{'testsocketid': {name: 'testname', errors: []}}}
-      state = reducer(state, requestMoveTo(2, 2, sid1))
+      state = reducer(state, requestMoveToTargetTile(2, 2, sid1))
       var player = getPlayer(state, sid1)
       expect(player).to.not.be.undefined
       var movement = state.movements.players[player.id]
       expect(movement).to.not.be.undefined
-      expect(movement).to.deep.equal({x:2,y:2})
-      state = reducer(state, requestMoveTo(3, 3, sid1))
+      expect(movement.x).to.equal(2)
+      expect(movement.y).to.equal(2)
+      state = reducer(state, requestMoveToTargetTile(3, 3, sid1))
       movement = state.movements.players[player.id]
       expect(movement).to.not.be.undefined
-      expect(movement).to.deep.equal({x:3,y:3})
+      expect(movement.x).to.equal(3)
+      expect(movement.y).to.equal(3)
+    })
+  })
+
+  describe('move to tile', () => {
+    it('should update player tile', () => {
+      state = reducer(state, moveToTile(5, 5, sid1))
+      var player = getPlayer(state, sid1)
+      expect(player).to.not.be.undefined
+      expect(player.tile).to.deep.equal({x:5,y:5})
     })
   })
 

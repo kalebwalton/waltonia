@@ -1,7 +1,7 @@
 import Controller from './Controller'
 import StoreManager from './store/'
 import {AUTH_BAD_REQUEST, AUTH_PLAYER_DOES_NOT_EXIST} from './errors/'
-import {expect} from 'chai'
+import {expect, assert} from 'chai'
 import {check} from './test/'
 import {pn1, pn2, ps1, ps2, em1, em2, sid1, sid2, mockState} from './reducers/mock'
 import io from 'socket.io-client';
@@ -77,13 +77,20 @@ describe('Controller', () => {
         });
       })
 
-      it('should tick with new targetTile on requestMoveTo', (done) => {
+      it('should tick with new tile shortly after requestMoveToTargetTile', (done) => {
+        var attempt = 0
+        var x=2,y=2
         io_client.on('tick', (state) => {
-          expect(state).to.have.property('player')
-          expect(state.player.targetTile).to.deep.equal({x: 5, y: 10})
-          done()
+          if (state.player.tile.x == x && state.player.tile.y == y) {
+            done()
+          }
+          attempt++
+          if (attempt >= 7) {
+            assert.fail(state.player.tile.x+","+state.player.tile.y,x+","+y, `Player tile x,y didn't equal ${x},${y} after ${attempt} ticks`)
+            done()
+          }
         })
-        io_client.emit('requestMoveTo', {x: 5, y: 10})
+        io_client.emit('requestMoveToTargetTile', {x, y})
       })
     })
 

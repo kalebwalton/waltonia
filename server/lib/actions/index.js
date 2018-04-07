@@ -23,14 +23,14 @@ export const disconnect = (socketId) => {
   return {type: DISCONNECT, socketId}
 }
 
-export const REQUEST_MOVE_TO = "REQUEST_MOVE_TO"
-export const requestMoveTo = (x, y, socketId) => {
-  return {type: REQUEST_MOVE_TO, x, y, socketId}
+export const REQUEST_MOVE_TO_TARGET_TILE = "REQUEST_MOVE_TO_TARGET_TILE"
+export const requestMoveToTargetTile = (x, y, socketId) => {
+  return {type: REQUEST_MOVE_TO_TARGET_TILE, x, y, socketId}
 }
 
-export const UPDATE_PLAYER_TILE = "UPDATE_PLAYER_TILE"
-export const updatePlayerTile = (x, y, socketId) => {
-  return {type: UPDATE_PLAYER_TILE, x, y, socketId}
+export const MOVE_TO_TILE = "MOVE_TO_TILE"
+export const moveToTile = (x, y, socketId) => {
+  return {type: MOVE_TO_TILE, x, y, socketId}
 }
 
 export const GAME_START = "GAME_START"

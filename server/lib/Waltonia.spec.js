@@ -4,11 +4,12 @@ import {expect} from 'chai'
 import {check} from './test/'
 import Waltonia from './Waltonia';
 import {fs} from "mz";
+import {mockState} from './reducers/mock'
 
 describe('Waltonia', () => {
   var waltonia
   before(() => {
-    waltonia = new Waltonia()
+    waltonia = new Waltonia({}, mockState())
   })
   after(() => {
     setTimeout(() => {waltonia.destroy()}, 1000)
@@ -20,7 +21,7 @@ describe('Waltonia', () => {
         expect(waltonia.store).to.not.be.undefined
         expect(waltonia.controller).to.not.be.undefined
         resolve()
-      }, 1000);
+      }, 2000);
     })
   }).timeout(5000)
 })

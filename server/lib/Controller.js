@@ -3,8 +3,8 @@ import babelify from 'express-babelify-middleware';
 import path from 'path';
 import http from 'http';
 import io_server from 'socket.io';
-import { newPlayer, clientErrorsSent, authenticate, requestMoveTo, disconnect, mapsRequest} from './actions/'
-import { getClientErrors, getClients, getClientTickState } from './selectors/'
+import { newPlayer, clientErrorsSent, authenticate, requestMoveToTargetTile, disconnect, mapsRequest, tilesetsRequest, moveToTile} from './actions/'
+import { getPlayerMovements, getClientErrors, getClients, getClientTickState, getClientByPlayerId, getPlayerById, getMapMeta} from './selectors/'
 
 
 /*
@@ -54,6 +54,8 @@ class Controller {
 
   constructor(config) {
     this.onStart = config.onStart
+    this.tickMovementsInterval = 500
+    this.tickMovementsTimeout = null
     this.tickInterval = 250
     this.tickTimeout = null
     this.sockets = {}
@@ -83,7 +85,7 @@ class Controller {
     this.handlerMap = {
       authenticate: this.onAuthenticate,
       register: this.onRegister,
-      requestMoveTo: this.onRequestMoveTo,
+      requestMoveToTargetTile: this.onRequestMoveTo,
       disconnect: this.onDisconnect
     }
 
@@ -102,18 +104,39 @@ class Controller {
     });
 
     this.dispatch(mapsRequest())
+    this.dispatch(tilesetsRequest())
 
     this.tick()
+    this.tickMovements()
   }
 
   tick() {
-    // Critical lifecycle event to update the state stored in this controller
-    // to reflect the new state in the store.
     this.emitAllClientErrors()
     this.emitClientTickState()
 
-    // FIXME put ticketInterval in the state
+    // FIXME put tickInterval in the state
     this.tickTimeout = setTimeout(this.tick.bind(this), this.tickInterval);
+  }
+
+  // Could easily break this up to be on a per player basis, calculating each
+  // players movements based on their movement speed.
+  tickMovements() {
+    var movements = getPlayerMovements(this.state)
+    for (var playerId in movements) {
+      var player = getPlayerById(this.state, playerId)
+      var movement = movements[playerId]
+      var mapMeta = getMapMeta(this.state, player.mapId)
+      if (mapMeta) {
+        mapMeta.pathfinder.calculate(player.tile.x, player.tile.y, movement.x, movement.y, (path) => {
+          if (path && path.length > 1) {
+            var client = getClientByPlayerId(this.state, playerId)
+            this.dispatch(moveToTile(path[1].x, path[1].y, client.socketId))
+          }
+        })
+      }
+    }
+
+    this.tickMovementsTimeout = setTimeout(this.tickMovements.bind(this), this.tickMovementsInterval)
   }
 
   emitClientTickState() {
@@ -156,10 +179,10 @@ class Controller {
 
   Data: { x: int, y: int }
   */
-  onMoveTo(e) {
+  onRequestMoveTo(e) {
     var {socket, data} = e
-    console.log("Event: requestMoveTo", socket.id, data)
-    this.dispatch(requestMoveTo(data.x, data.y, socket.id))
+    console.log("Event: requestMoveToTargetTile", socket.id, data)
+    this.dispatch(requestMoveToTargetTile(data.x, data.y, socket.id))
   }
 
   /*
@@ -185,6 +208,9 @@ class Controller {
   destroy() {
     if (this.tickTimeout) {
       clearTimeout(this.tickTimeout)
+    }
+    if (this.tickMovementsTimeout) {
+      clearTimeout(this.tickMovementsTimeout)
     }
     this.io.close()
     Object.keys(this.sockets).forEach(socketId => {

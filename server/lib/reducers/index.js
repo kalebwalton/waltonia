@@ -5,8 +5,8 @@ import {
   REGISTER,
   AUTHENTICATE,
   DISCONNECT,
-  REQUEST_MOVE_TO,
-  UPDATE_PLAYER_TILE,
+  REQUEST_MOVE_TO_TARGET_TILE,
+  MOVE_TO_TILE,
   GAME_START,
   MAPS_LOAD,
   TILESETS_LOAD
@@ -145,14 +145,14 @@ const playerInteractionReducer = (state = {}, action) => {
       }
       break
 
-    case REQUEST_MOVE_TO:
+    case REQUEST_MOVE_TO_TARGET_TILE:
       var {x,y} = action
       if (x<0 || y<0) {
         nstate = insertClientError(nstate, socketId, MOVE_INVALID_TILE)
         break
       }
 
-      // This is where we want to do some target tile validation
+      // FIXME This is where we want to do some target tile validation
       var player = getPlayer(nstate, socketId)
       if (player) {
         nstate = {
@@ -161,14 +161,14 @@ const playerInteractionReducer = (state = {}, action) => {
             ...nstate.movements,
             players: {
               ...nstate.movements.players,
-              [player.id]: { x, y }
+              [player.id]: { x, y, requestedAt: Date.now() }
             }
           }
         }
       }
       break
 
-    case UPDATE_PLAYER_TILE:
+    case MOVE_TO_TILE:
       var {x,y} = action
       var player = getPlayer(nstate, socketId)
       if (player) {
@@ -177,8 +177,29 @@ const playerInteractionReducer = (state = {}, action) => {
           tile: {x,y}
         })
       }
-      break
 
+      // Clear movement for the player if he reached his target tile
+      if (nstate.movements.players) {
+        var movement = nstate.movements.players[player.id]
+        if (movement) {
+          if (player.tile.x == movement.x && player.tile.y == movement.y) {
+            // Done moving, remove from queue
+            var playerMovements = {...nstate.movements.players}
+            delete playerMovements[player.id]
+            nstate = {
+              ...nstate,
+              movements: {
+                ...nstate.movements,
+                players: {
+                  ...playerMovements
+                }
+              }
+            }
+          }
+        }
+      }
+
+      break
 
     case CLIENT_ERRORS_SENT:
       nstate = insertClient(nstate, {
