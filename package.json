@@ -21,7 +21,7 @@
   "dependencies": {
     "bluebird": "^3.5.1",
     "bufferutil": "^3.0.3",
-    "easystarjs": "^0.4.2",
+    "easystarjs": "^0.4.3",
     "eventemitter3": "^3.0.1",
     "express": "^4.16.2",
     "express-babelify-middleware": "^0.2.1",

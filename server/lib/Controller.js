@@ -3,7 +3,7 @@ import babelify from 'express-babelify-middleware';
 import path from 'path';
 import http from 'http';
 import io_server from 'socket.io';
-import { newPlayer, clientErrorsSent, authenticate, moveTo, disconnect, mapsRequest} from './actions/'
+import { newPlayer, clientErrorsSent, authenticate, requestMoveTo, disconnect, mapsRequest} from './actions/'
 import { getClientErrors, getClients, getClientTickState } from './selectors/'
 
 
@@ -83,7 +83,7 @@ class Controller {
     this.handlerMap = {
       authenticate: this.onAuthenticate,
       register: this.onRegister,
-      moveTo: this.onMoveTo,
+      requestMoveTo: this.onRequestMoveTo,
       disconnect: this.onDisconnect
     }
 
@@ -158,8 +158,8 @@ class Controller {
   */
   onMoveTo(e) {
     var {socket, data} = e
-    console.log("Event: moveTo", socket.id, data)
-    this.dispatch(moveTo(data.x, data.y, socket.id))
+    console.log("Event: requestMoveTo", socket.id, data)
+    this.dispatch(requestMoveTo(data.x, data.y, socket.id))
   }
 
   /*

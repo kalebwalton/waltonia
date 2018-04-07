@@ -44,6 +44,13 @@ export const getClientTickState = (state, socketId) => {
   return s
 }
 
+export const getMapsMeta = state => state.mapsMeta
+export const getMapMeta = (state, mapId) => {
+  var mapsMeta = getMapsMeta(state)
+  if (mapsMeta) {
+    return mapsMeta[mapId]
+  }
+}
 export const getMaps = state => state.maps
 export const getMap = (state, mapId) => {
   var maps = getMaps(state)
@@ -55,6 +62,7 @@ export const getMap = (state, mapId) => {
     }
   }
 }
+
 export const getLayer = (state, mapId, name) => {
   var map = getMap(state, mapId)
   if (map && map.layers) {
@@ -76,24 +84,13 @@ export const getTileset = (state, id) => {
     }
   }
 }
-export const getTileType = (state, mapId, layerName, x, y) => {
-  var map = getMap(state, mapId)
-  if (map) {
-    var layer = getLayer(state, mapId, layerName)
-    if (layer) {
-      var tilesetId = map.tilesets[0].source.substring(map.tilesets[0].source.lastIndexOf('/')+1).split(".")[0]
-      var tileset = getTileset(state, tilesetId)
-      if (tileset) {
-        var tileGid = layer.data[(y*layer.width)+x]
-        var tile = tileset.tiles[tileGid]
-        if (tile) {
-          return tile.type
-        }
-      }
-    }
+
+export const getTile = (state, mapId, x, y) => {
+  var mapMeta = getMapMeta(state, mapId)
+  if (mapMeta && mapMeta.tiles) {
+    return mapMeta.tiles[y][x]
   }
 }
-
 
 export function selectTickState(state) {
   return {

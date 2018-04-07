@@ -23,9 +23,14 @@ export const disconnect = (socketId) => {
   return {type: DISCONNECT, socketId}
 }
 
-export const MOVE_TO = "MOVE_TO"
-export const moveTo = (x, y, socketId) => {
-  return {type: MOVE_TO, x, y, socketId}
+export const REQUEST_MOVE_TO = "REQUEST_MOVE_TO"
+export const requestMoveTo = (x, y, socketId) => {
+  return {type: REQUEST_MOVE_TO, x, y, socketId}
+}
+
+export const UPDATE_PLAYER_TILE = "UPDATE_PLAYER_TILE"
+export const updatePlayerTile = (x, y, socketId) => {
+  return {type: UPDATE_PLAYER_TILE, x, y, socketId}
 }
 
 export const GAME_START = "GAME_START"

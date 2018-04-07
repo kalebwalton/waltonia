@@ -4,7 +4,7 @@ import {
   AUTHENTICATE, authenticate,
   CLIENT_ERRORS_SENT, clientErrorsSent,
   DISCONNECT, disconnect,
-  MOVE_TO, moveTo,
+  REQUEST_MOVE_TO, requestMoveTo,
   MAPS_LOAD, mapsLoad, mapsRequest,
   TILESETS_LOAD, tilesetsLoad, tilesetsRequest
 } from '../actions/'
@@ -18,10 +18,11 @@ import {
   MOVE_INVALID_TILE,
 } from '../errors/'
 import {
-  getPlayer, getPlayerByName, getTileType, getMap
+  getPlayer, getPlayerByName, getTileType, getMap, getMapMeta, getTile
 } from '../selectors/'
 import {expect} from 'chai'
 import {pn1, pn2, ps1, ps2, em1, em2, sid1, sid2, pid1, pid2, mockState} from './mock'
+import easystarjs from 'easystarjs';
 
 
 
@@ -92,21 +93,22 @@ describe('Reducers and actions', () => {
 
   describe('move to', () => {
     it('should error on invalid tile', () => {
-      state = reducer(state, moveTo(-1, 1, sid1))
+      state = reducer(state, requestMoveTo(-1, 1, sid1))
       expect(state.clients[sid1].errors).to.not.be.empty
       expect(state.clients[sid1].errors[0]).to.equal(MOVE_INVALID_TILE)
     })
-    it('should create or update targetTile on valid tile', () => {
+    it('should create or update players movement queue on valid tile', () => {
       //var oldState = {players:{'testname':{name:'testname', password:'testpass', targetTile: {x:1, y:1}}}, clients:{'testsocketid': {name: 'testname', errors: []}}}
-      state = reducer(state, moveTo(2, 2, sid1))
+      state = reducer(state, requestMoveTo(2, 2, sid1))
       var player = getPlayer(state, sid1)
       expect(player).to.not.be.undefined
-      expect(player.targetTile).to.not.be.undefined
-      expect(player.targetTile).to.deep.equal({x:2,y:2})
-      state = reducer(state, moveTo(3, 3, sid1))
-      player = getPlayer(state, sid1)
-      expect(player.targetTile).to.not.be.undefined
-      expect(player.targetTile).to.deep.equal({x:3,y:3})
+      var movement = state.movements.players[player.id]
+      expect(movement).to.not.be.undefined
+      expect(movement).to.deep.equal({x:2,y:2})
+      state = reducer(state, requestMoveTo(3, 3, sid1))
+      movement = state.movements.players[player.id]
+      expect(movement).to.not.be.undefined
+      expect(movement).to.deep.equal({x:3,y:3})
     })
   })
 
@@ -124,29 +126,54 @@ describe('Reducers and actions', () => {
     })
   })
 
-  describe('mapsRequest', () => {
-    it('should load maps', () => {
-      mapsRequest()(action => {
-        var {maps} = action
-        state = reducer(state, mapsLoad(maps))
-        expect(state.maps).to.not.be.empty
-        expect(state.maps[0].layers).to.not.be.empty
-      })
+
+  describe('maps related reductions', () => {
+    var map
+    beforeEach(() => {
+      return new Promise((resolve) => {
+        mapsRequest()(mapsAction => {
+          tilesetsRequest()(tilesetsAction => {
+            var {maps} = mapsAction
+            var {tilesets} = tilesetsAction
+            state = reducer(state, mapsLoad(maps))
+            state = reducer(state, tilesetsLoad(tilesets))
+            map = getMap(state, 'test_over_0')
+            resolve()
+          })
+        })
+      });
     })
 
-    it('should support loading tile types', () => {
-      mapsRequest()(mapsAction => {
-        tilesetsRequest()(tilesetsAction => {
-          var {maps} = mapsAction
-          var {tilesets} = tilesetsAction
-          state = reducer(state, mapsLoad(maps))
-          state = reducer(state, tilesetsLoad(tilesets))
-          expect(state.maps).to.not.be.empty
-          var map = getMap(state, 'test_over_0')
-          expect(map.layers).to.not.be.empty
-          expect(getTileType(state, map.id, 'map', 0, 1)).to.equal('block')
-          expect(getTileType(state, map.id, 'map', 1, 1)).to.equal('walk')
-        })
+    it('should load maps', () => {
+      expect(map.layers).to.not.be.empty
+    })
+
+    it('should load map tiles metadata', () => {
+      var tile1 = getTile(state, map.id, 0, 1)
+      var tile2 = getTile(state, map.id, 2, 2)
+      expect(tile1.type).to.equal('block')
+      expect(tile2.type).to.equal('walk')
+      expect(tile2.portal).to.equal('test_under_0')
+    })
+
+    it('should load map pathfinding metadata', () => {
+      var mapMeta = getMapMeta(state, map.id)
+      expect(mapMeta.pathfinder).to.not.be.undefined
+    })
+
+    it('should accurately pathfind based on metadata', (done) => {
+      var pathfinder = getMapMeta(state, map.id).pathfinder
+      pathfinder.calculate(6,7,6,5, path => {
+        expect(path).to.deep.equal(
+          [
+            { x: 6, y: 7 },
+            { x: 5, y: 7 },
+            { x: 5, y: 6 },
+            { x: 5, y: 5 },
+            { x: 6, y: 5 }
+          ]
+        )
+        done()
       })
     })
   })

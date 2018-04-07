@@ -77,13 +77,13 @@ describe('Controller', () => {
         });
       })
 
-      it('should tick with new targetTile on moveTo', (done) => {
+      it('should tick with new targetTile on requestMoveTo', (done) => {
         io_client.on('tick', (state) => {
           expect(state).to.have.property('player')
           expect(state.player.targetTile).to.deep.equal({x: 5, y: 10})
           done()
         })
-        io_client.emit('moveTo', {x: 5, y: 10})
+        io_client.emit('requestMoveTo', {x: 5, y: 10})
       })
     })
 

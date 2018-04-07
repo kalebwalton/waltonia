@@ -50,7 +50,24 @@ export const mockState = (testing = true) => {
         errors: []
       }
     },
-    maps: {}
+    movements: {
+      players: {
+        /*
+        [pid]: {
+          x: 5,
+          y: 5
+        }
+        */
+      }
+    },
+    mapsMeta: {},
+    maps: {},
+    defaults: {
+      mapId: 'test_over_0',
+      spawnTile: {
+        x:5, y:5
+      }
+    }
     // maps: {
     //   [mid1]: {
     //     name: mn1,
