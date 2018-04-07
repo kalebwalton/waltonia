@@ -151,33 +151,50 @@ class Character extends Phaser.GameObjects.Sprite {
 
   handleMoveTo(toTile, callback) {
     var mp = this.movementPath
+
+    // If the toTile is already on the movementPath then just ignore the call altogether
+    for (let pathItem of this.movementPath) {
+      if (pathItem.x == toTile.x && pathItem.y == toTile.y) {
+        return
+      }
+    }
+
+    mp.push({x: toTile.x, y: toTile.y})
+
     var fromTile = null
     if (mp && mp.length > 0) {
       fromTile = this.scene.movement.getTileAt(mp[0].x, mp[0].y);
     } else {
       fromTile = this.scene.movement.getTileAtObject(this);
     }
-    this.pathTo(fromTile, toTile, path => {
-      if (path && path.length > 0) {
-        // If we're at rest then remove the first path item since it'll be the
-        // current tile. But if we're in the middle of a movement then don't
-        // do anything.
-        if (this.x == fromTile.pixelX && this.y == fromTile.pixelY) {
-          path.shift()
-        }
 
-        var lastPathItem = path[path.length-1]
-        var lastPathTile = this.scene.movement.getTileAt(lastPathItem.x, lastPathItem.y)
-        var charTile = this.scene.movement.getTileAtObject(this)
-        if (this.scene.isCharacterAtTile(lastPathTile, this)) {
-          path.pop()
-        }
-        this.movementPath = path
-        if (!this.moving) {
-          this.moveToByPath(callback)
-        }
-      }
-    })
+
+
+    if (!this.moving) {
+      this.moveToByPath(callback)
+    }
+    //
+    // this.pathTo(fromTile, toTile, path => {
+    //   if (path && path.length > 0) {
+    //     // If we're at rest then remove the first path item since it'll be the
+    //     // current tile. But if we're in the middle of a movement then don't
+    //     // do anything.
+    //     if (this.x == fromTile.pixelX && this.y == fromTile.pixelY) {
+    //       path.shift()
+    //     }
+    //
+    //     var lastPathItem = path[path.length-1]
+    //     var lastPathTile = this.scene.movement.getTileAt(lastPathItem.x, lastPathItem.y)
+    //     var charTile = this.scene.movement.getTileAtObject(this)
+    //     if (this.scene.isCharacterAtTile(lastPathTile, this)) {
+    //       path.pop()
+    //     }
+    //     this.movementPath = path
+    //     if (!this.moving) {
+    //       this.moveToByPath(callback)
+    //     }
+    //   }
+    // })
   }
 
   moveToByPath(callback) {

@@ -57,15 +57,15 @@ export const tilesetsRequest = () => {
 export const mapOrTileSetRequest = (globPattern, loadFn) => {
   return (dispatch) => {
     return globAsync(globPattern).catch(function(err) {
-          throw new Error("Error to read json files: " + err);
+      throw new Error("Error to read json files: " + err);
     }).map(function(file) {
-        return fs.readFileAsync(file, 'utf8').then((data) => {
-          var json = JSON.parse(data)
-          json.id = file.substring(file.lastIndexOf('/')+1).split(".")[0]
-          return json
-        }, function(err) {
-            throw new Error("Error to read config ("+file+")" + err);
-        });
+      return fs.readFileAsync(file, 'utf8').then((data) => {
+        var json = JSON.parse(data)
+        json.id = file.substring(file.lastIndexOf('/')+1).split(".")[0]
+        return json
+      }, function(err) {
+          throw new Error("Error to read config ("+file+")" + err);
+      });
     }).then(
       maps => dispatch(loadFn(maps)),
       error => console.log(error)

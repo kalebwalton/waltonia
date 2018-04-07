@@ -115,8 +115,6 @@ class Controller {
   createPlayer(scene, id, name, tile, cameraFollow) {
     console.log("Creating player", id, name, tile, cameraFollow)
     var player = new Player({id, name, scene, tile, cameraFollow});
-    player.on('moveStart', this.onCharacterMoveStart.bind(this))
-    player.on('moveComplete', this.onCharacterMoveComplete.bind(this))
     return player
   }
 
@@ -131,13 +129,11 @@ class Controller {
     player.on('pointerdown', (pointer) => {
       this.onCharacterClick(player)
     });
-    return otherPlayer
+    return player
   }
 
   createMob(id, tile) {
     var mob = new Mob({id: id, scene: this.getMapScene(), tile});
-    mob.on('moveStart', this.onCharacterMoveStart.bind(this))
-    mob.on('moveComplete', this.onCharacterMoveComplete.bind(this))
     mob.on('pointerdown', (pointer) => {
       this.onCharacterClick(mob)
     });
@@ -147,7 +143,6 @@ class Controller {
   // SOCKET EVENT HANDLING
 
   onTick(state) {
-    console.log("tick", state)
     var scene = this.getMapScene()
     if (scene && scene.movement) {
       if (state.player) {
@@ -158,7 +153,9 @@ class Controller {
           this.getMapScene();
         }
 
-        this.player.updateState(state.player)
+        console.log("Tick Player", state.player.tile)
+
+        this.player.updateState({targetTile: state.player.tile})
       }
 
       if (state.players) {
@@ -169,7 +166,8 @@ class Controller {
             this.players[id] = this.createOtherPlayer(this.getMapScene(), player.id, player.name, tile);
           }
           if (this.players[id]) {
-            this.players[id].updateState(player)
+            console.log("Tick Player 2", player.tile)
+            this.players[id].updateState({targetTile: player.tile})
           }
         }
       }
@@ -228,7 +226,7 @@ class Controller {
   }
 
   doPlayerMoveTo(tile) {
-    this.socket.emit('moveTo', {x: tile.x, y: tile.y})
+    this.socket.emit('requestMoveToTargetTile', {x: tile.x, y: tile.y})
   }
 
 
@@ -249,16 +247,8 @@ class Controller {
     }
   }
 
-  onCharacterMoveStart(character, fromTile) {
-    this.getMapScene().easystar.stopAvoidingAdditionalPoint(fromTile.x, fromTile.y)
-  }
-
-  onCharacterMoveComplete(character, toTile) {
-    this.getMapScene().easystar.avoidAdditionalPoint(toTile.x, toTile.y)
-  }
-
   onFirstPlayerMoveComplete(player, toTile) {
-    this.handlePlayerTileActions(toTile)
+    //this.handlePlayerTileActions(toTile)
   }
 
   onCharacterClick(character) {

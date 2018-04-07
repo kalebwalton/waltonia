@@ -54,7 +54,7 @@ class Controller {
 
   constructor(config) {
     this.onStart = config.onStart
-    this.tickMovementsInterval = 500
+    this.tickMovementsInterval = 250
     this.tickMovementsTimeout = null
     this.tickInterval = 250
     this.tickTimeout = null
@@ -85,7 +85,7 @@ class Controller {
     this.handlerMap = {
       authenticate: this.onAuthenticate,
       register: this.onRegister,
-      requestMoveToTargetTile: this.onRequestMoveTo,
+      requestMoveToTargetTile: this.onRequestMoveToTargetTile,
       disconnect: this.onDisconnect
     }
 
@@ -121,27 +121,38 @@ class Controller {
   // Could easily break this up to be on a per player basis, calculating each
   // players movements based on their movement speed.
   tickMovements() {
-    var movements = getPlayerMovements(this.state)
-    for (var playerId in movements) {
-      var player = getPlayerById(this.state, playerId)
-      var movement = movements[playerId]
-      var mapMeta = getMapMeta(this.state, player.mapId)
+    let start = Date.now()
+    let movements = getPlayerMovements(this.state)
+    for (let playerId in movements) {
+      //let playerId = playerIdRef
+      let player = getPlayerById(this.state, playerId)
+      let movement = movements[playerId]
+      let mapMeta = getMapMeta(this.state, player.mapId)
       if (mapMeta) {
         mapMeta.pathfinder.calculate(player.tile.x, player.tile.y, movement.x, movement.y, (path) => {
           if (path && path.length > 1) {
-            var client = getClientByPlayerId(this.state, playerId)
-            this.dispatch(moveToTile(path[1].x, path[1].y, client.socketId))
+            let client = getClientByPlayerId(this.state, playerId)
+            if (client) {
+              console.log("Dispatching for ", client.socketId, playerId)
+              this.dispatch(moveToTile(path[1].x, path[1].y, client.socketId))
+            } else {
+              // FIXME deal with missing clients
+              console.error("Could not find client for playerId "+playerId)
+            }
           }
         })
       }
     }
-
     this.tickMovementsTimeout = setTimeout(this.tickMovements.bind(this), this.tickMovementsInterval)
   }
 
   emitClientTickState() {
     Object.keys(this.sockets).forEach(socketId => {
-      this.sockets[socketId].emit('tick', getClientTickState(this.state, socketId))
+      var tickState = getClientTickState(this.state, socketId)
+      if (tickState.player) {
+        console.log("TICKSTATE", tickState.player.name, tickState.player.tile)
+      }
+      this.sockets[socketId].emit('tick', tickState)
     })
   }
 
@@ -179,7 +190,7 @@ class Controller {
 
   Data: { x: int, y: int }
   */
-  onRequestMoveTo(e) {
+  onRequestMoveToTargetTile(e) {
     var {socket, data} = e
     console.log("Event: requestMoveToTargetTile", socket.id, data)
     this.dispatch(requestMoveToTargetTile(data.x, data.y, socket.id))

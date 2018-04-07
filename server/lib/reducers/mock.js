@@ -29,7 +29,7 @@ export const mockState = (testing = true) => {
         password: ps2,
         email: em2,
         tile: { x: 1, y:2 },
-        mapId: mid2
+        mapId: mid1
       }
     },
     clients: {

@@ -24,7 +24,7 @@ class Waltonia extends Phaser.Game {
 
     this.helper = new Helper()
     this.controller = new Controller({sceneManager: this.scene, game: this})
-    this.controller.changeLevel('waltonia', 'over', 0)
+    this.controller.changeLevel('test', 'over', 0)
   }
 
 }

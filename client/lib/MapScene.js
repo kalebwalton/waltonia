@@ -31,8 +31,8 @@ class MapScene extends Phaser.Scene {
     console.log("===MAIN SCENE PRELOAD===")
     this.movement = new Movement(this)
     this.url = new URL(window.location.href);
-    this.load.tilemapTiledJSON(this.getKey(), `assets/maps/defs/${this.mapConfig.name}_${this.mapConfig.type}_${this.mapConfig.level}.json`);
-    this.load.image('map', `assets/maps/tiles/combined/${this.mapConfig.name}_${this.mapConfig.type}.png`);
+    this.load.tilemapTiledJSON(this.getKey(), `assets/maps/defs/_${this.mapConfig.name}_${this.mapConfig.type}_${this.mapConfig.level}.json`);
+    this.load.image(this.mapConfig.type, `assets/maps/tiles/combined/${this.mapConfig.name}_${this.mapConfig.type}.png`);
     this.load.spritesheet('player', 'assets/sprites/players/female_warrior.png', { frameWidth: 20, frameHeight: 20 });
     this.load.spritesheet('mob', 'assets/sprites/mobs/little_flare.png', { frameWidth: 20, frameHeight: 20 });
     this.load.spritesheet('highlight', 'assets/sprites/highlight.png', { frameWidth: 20, frameHeight: 20 });
@@ -42,7 +42,7 @@ class MapScene extends Phaser.Scene {
   initMap() {
     this.map = this.make.tilemap({ key: this.getKey(), tileWidth: 20, tileHeight: 20 });
     console.log(this.map)
-    var tileset = this.map.addTilesetImage('map');
+    var tileset = this.map.addTilesetImage(this.mapConfig.type);
     var layer = this.map.createStaticLayer('map', tileset);
 
     //  This isn't totally accurate, but it'll do for now
@@ -74,8 +74,8 @@ class MapScene extends Phaser.Scene {
 
   initPlayer() {
     var playername = this.url.searchParams.get("name");
-    var password = this.url.searchParams.get("password")
-    this.controller.doAuthenticate(playername, password)
+    var playerpass = this.url.searchParams.get("password")
+    this.controller.doAuthenticate(playername, playerpass)
   }
 
   initInput() {

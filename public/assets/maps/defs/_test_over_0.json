@@ -11,7 +11,7 @@
          "width":30,
          "x":0,
          "y":0
-        },
+        }, 
         {
          "draworder":"topdown",
          "name":"portals",
@@ -27,7 +27,7 @@
                  "width":20,
                  "x":40,
                  "y":60
-                },
+                }, 
                 {
                  "gid":1430,
                  "height":20,
@@ -53,8 +53,17 @@
  "tileheight":20,
  "tilesets":[
         {
+         "columns":48,
          "firstgid":1,
-         "source":"..\/tilesets\/over.json"
+         "image":"..\/tiles\/combined\/waltonia_over.png",
+         "imageheight":600,
+         "imagewidth":960,
+         "margin":0,
+         "name":"over",
+         "spacing":0,
+         "tilecount":1440,
+         "tileheight":20,
+         "tilewidth":20
         }],
  "tilewidth":20,
  "type":"map",

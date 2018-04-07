@@ -131,10 +131,14 @@ const playerInteractionReducer = (state = {}, action) => {
           break
         }
         // If the player has a socketId already and is getting a new one, then update
-        // the existing client to have errors.
+        // the existing client to have errors, and also remove its' playerId
         var playerClient = getClientByPlayerId(nstate, player.id)
         if (playerClient) {
           nstate = insertClientError(nstate, playerClient.socketId, AUTH_ON_OTHER_DEVICE)
+          nstate = insertClient(nstate, {
+            ...playerClient,
+            playerId: undefined
+          })
         }
         nstate = insertClient(nstate, {
           ...client,
@@ -172,16 +176,17 @@ const playerInteractionReducer = (state = {}, action) => {
       var {x,y} = action
       var player = getPlayer(nstate, socketId)
       if (player) {
+        console.log("Moving", player.name, {x,y})
         nstate = insertPlayer(nstate, {
           ...player,
           tile: {x,y}
         })
       }
-
       // Clear movement for the player if he reached his target tile
       if (nstate.movements.players) {
         var movement = nstate.movements.players[player.id]
         if (movement) {
+          player = getPlayer(nstate, socketId) // Need an updated player with the latest x/y coords
           if (player.tile.x == movement.x && player.tile.y == movement.y) {
             // Done moving, remove from queue
             var playerMovements = {...nstate.movements.players}
