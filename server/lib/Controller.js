@@ -147,6 +147,8 @@ class Controller {
           // FIXME move this to a per player calculator, and move the above logic to tick()
           let found = false
           for (let pathItem of movementPath) {
+            // FIXME use a 'pointer' instead of this brute force search. Probably instead of
+            // moveToTile do something like incrementPath... maybe... need to think through
             if (found) {
               console.log("Moving to tile ", pathItem, client.socketId, playerId)
               this.dispatch(moveToTile(pathItem.x, pathItem.y, client.socketId))
