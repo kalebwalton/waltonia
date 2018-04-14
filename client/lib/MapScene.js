@@ -1,10 +1,10 @@
+import './utils/TilemapLoadHelper'
 import Character from './objects/Character'
 import Player from './objects/Player'
 import Mob from './objects/Mob'
 import Movement from './utils/Movement'
-import _ from 'underscore';
-import easystarjs from 'easystarjs';
-import EventEmitter from 'eventemitter3';
+import _ from 'underscore'
+import EventEmitter from 'eventemitter3'
 
 class MapScene extends Phaser.Scene {
   constructor(config) {
@@ -12,10 +12,12 @@ class MapScene extends Phaser.Scene {
     var key = map.name+"_"+map.type+"_"+map.level
     super({key})
     this.key = key
-    this.easystar = null
     this.mapConfig = map
     this.controller = config.controller
     this.events = new EventEmitter()
+    this.movement = new Movement(this)
+    this.url = new URL(window.location.href);
+
   }
 
   on(eventName, callback) {
@@ -29,57 +31,12 @@ class MapScene extends Phaser.Scene {
   preload()
   {
     console.log("===MAIN SCENE PRELOAD===")
-    this.movement = new Movement(this)
-    this.url = new URL(window.location.href);
 
-
-    var customTilemapJSONFile = (key, url, path, format, xhrSettings) => {
-      var json = new Phaser.Loader.FileTypes.JSONFile(key, url, path, xhrSettings);
-      json.type = 'tilemapJSON';
-      json.tilemapFormat = format;
-      var onProcess = function(callback) {
-        this.state = Phaser.Loader.FILE_PROCESSING;
-        this.data = JSON.parse(this.xhrLoader.responseText);
-
-        // Need to pass the URL through so we can create a relative path to any external
-        // source files like tilesets.
-        this.data.url = url
-
-        for (let i=0;i<this.data.tilesets.length;i++) {
-          let tileset = this.data.tilesets[i]
-
-          // Remove tileset.source so tilemap parser doesn't bomb out
-          tileset.sourceBackup = tileset.source
-          delete tileset.source
-
-          // // Add another file to the loader before all files are loaded
-          // loader.addFile(customTilesetJSONFile(key+"_tileset_"+i, tilemapURI.pathname, path, format, xhrSettings))
-
-        }
-        this.onComplete();
-        callback(this);
-      }
-      json.onProcess = onProcess.bind(json)
-
-      return json;
-    }
-
-    Phaser.Loader.FileTypesManager.register('customTilemapJSONFile', function (key, url, xhrSettings) {
-        if (Array.isArray(key)) {
-            for (var i = 0; i < key.length; i++) {
-                //  If it's an array it has to be an array of Objects, so we get everything out of the 'key' object
-                this.addFile(customTilemapJSONFile(key[i], url, this.path, Phaser.Tilemaps.Formats.TILED_JSON, xhrSettings));
-            }
-        } else {
-            this.addFile(customTilemapJSONFile(key, url, this.path, Phaser.Tilemaps.Formats.TILED_JSON, xhrSettings));
-        }
-
-        return this;
-    });
+    // The TilemapLoadHelper depends on this
     Phaser.Loader.FileTypesManager.install(this.load)
 
     this.load.customTilemapJSONFile(this.getKey(), `assets/maps/defs/${this.mapConfig.name}_${this.mapConfig.type}_${this.mapConfig.level}.json`);
-    this.load.image(this.mapConfig.type, `assets/maps/tiles/combined/${this.mapConfig.name}_${this.mapConfig.type}.png`);
+
     this.load.spritesheet('player', 'assets/sprites/players/female_warrior.png', { frameWidth: 20, frameHeight: 20 });
     this.load.spritesheet('mob', 'assets/sprites/mobs/little_flare.png', { frameWidth: 20, frameHeight: 20 });
     this.load.spritesheet('highlight', 'assets/sprites/highlight.png', { frameWidth: 20, frameHeight: 20 });
@@ -88,62 +45,16 @@ class MapScene extends Phaser.Scene {
 
   create()
   {
-    this.load.removeAllListeners()
-    this.load.once('complete', this.myInit, this);
-
-    var customTilesetJSONFile = (tilemapKey, key, url, path, format, xhrSettings) => {
-      var json = new Phaser.Loader.FileTypes.JSONFile(key, url, path, xhrSettings);
-
-      var onProcess = function(callback) {
-        this.state = Phaser.Loader.FILE_PROCESSING;
-        this.data = JSON.parse(this.xhrLoader.responseText);
-        this.data.tilemapKey = tilemapKey
-        this.onComplete();
-        callback(this);
-      }
-      var onComplete = function () {
-          if (this.linkFile) {
-              if (this.linkFile.state === Phaser.Loader.FILE_WAITING_LINKFILE) {
-                  //  The linkfile has finished processing, and is waiting for this file, so let's do them both
-                  this.state = Phaser.Loader.FILE_COMPLETE;
-                  this.linkFile.state = Phaser.Loader.FILE_COMPLETE;
-                  this.loader.emit('filecomplete', this)
-              } else {
-                  //  The linkfile still hasn't finished loading and/or processing yet
-                  this.state = Phaser.Loader.FILE_WAITING_LINKFILE;
-              }
-          } else {
-              this.state = Phaser.Loader.FILE_COMPLETE;
-              this.loader.emit('filecomplete', this)
-          }
-      }
-      json.onProcess = onProcess.bind(json)
-      json.onComplete = onComplete.bind(json)
-
-      return json;
-    }
-
-    Phaser.Loader.FileTypesManager.register('customTilesetJSONFile', function (tilemapKey, key, url, xhrSettings) {
-        if (Array.isArray(key)) {
-            for (var i = 0; i < key.length; i++) {
-                //  If it's an array it has to be an array of Objects, so we get everything out of the 'key' object
-                this.addFile(customTilesetJSONFile(tilemapKey, key[i], url, this.path, Phaser.Tilemaps.Formats.TILED_JSON, xhrSettings, this));
-            }
-        } else {
-            this.addFile(customTilesetJSONFile(tilemapKey, key, url, this.path, Phaser.Tilemaps.Formats.TILED_JSON, xhrSettings, this));
-        }
-        return this;
-    });
-    Phaser.Loader.FileTypesManager.install(this.load)
-
     var tm = this.cache.tilemap.get(this.getKey()).data
     var tss = tm.tilesets
     for (let i=0;i<tss.length;i++) {
       let ts = tss[i]
       let loc = new URL(window.location.href)
-      let tilemapURI = new URL(tm.url.substr(0,tm.url.lastIndexOf("/")+1)+ts.sourceBackup, loc)
-      this.load.customTilesetJSONFile(this.getKey(), this.getKey()+"_ts_"+i, tilemapURI.pathname)
+      let tilesetURI = new URL(tm.url.substr(0,tm.url.lastIndexOf("/")+1)+ts.sourceBackup, loc)
+      this.load.customTilesetJSONFile(this.getKey(), this.getKey()+"_ts_"+i, tilesetURI.pathname)
     }
+
+    this.load.removeAllListeners()
 
     this.load.on('filecomplete', (file) => {
       // Just check the data for a key of 'tilemapKey' which indicates it's a tileset
@@ -153,53 +64,37 @@ class MapScene extends Phaser.Scene {
         // Merge into the associated tilemap
         var tm = this.cache.tilemap.get(ts.tilemapKey).data
         tm.tilesets[0] = ts
-        console.log(tm)
       }
     })
 
+    this.load.once('complete', this.initTilesetImage, this);
     this.load.start()
   }
 
-  myInit() {
+  initTilesetImage() {
+    let tm = this.cache.tilemap.get(this.getKey()).data
+    let ts = tm.tilesets[0]
+    let loc = new URL(window.location.href)
+    let imageURL = ts.image
+    let tilesetImageURI = new URL(tm.url.substr(0,tm.url.lastIndexOf("/")+1)+imageURL, loc)
+    this.load.image(ts.name, tilesetImageURI.pathname);
+
+    this.load.removeAllListeners()
+    this.load.once('complete', this.initFinal, this);
+    this.load.start()
+  }
+
+  initFinal() {
     this.initMap();
-    this.initEasystar();
     this.initPlayer();
     this.initInput();
     this.events.emit("create")
   }
 
   initMap() {
-
     this.map = this.make.tilemap({ key: this.getKey(), tileWidth: 20, tileHeight: 20 });
-    console.log(this.map)
-    var tileset = this.map.addTilesetImage(this.mapConfig.type);
-    var layer = this.map.createStaticLayer('map', tileset);
-
-    //  This isn't totally accurate, but it'll do for now
-    var tileData = this.map.tilesets[0].tileData;
-    var collideIndexes = []
-    for (var i in tileData) {
-      switch (tileData[i].type) {
-        case 'block':
-        case 'sign':
-        case 'stone':
-        case 'tombstone':
-        case 'tree':
-        case 'well':
-          collideIndexes.push(i)
-          break
-
-        case 'door':
-        case 'grass':
-        case 'gravel':
-        case 'path':
-        case 'sand':
-        case 'stair':
-        default:
-          break
-      }
-    }
-    this.map.setCollision(collideIndexes, true, true, layer)
+    this.map.addTilesetImage(this.mapConfig.type);
+    this.map.createStaticLayer('map', tileset);
   }
 
   initPlayer() {
@@ -223,34 +118,6 @@ class MapScene extends Phaser.Scene {
         this.controller.player.notFollow()
       }, 50)
     }, 500), this);
-  }
-
-  initEasystar() {
-    this.easystar = new easystarjs.js();
-    let map = this.map
-    var mapData = []
-    for (var rows of map.layers[0].data) {
-      let b = [];
-      for (var tile of rows) {
-        b.push(tile.index)
-        var tileData = map.tilesets[0].getTileData(tile.index)
-        if (tileData && map.tilesets[0].getTileData(tile.index).type == 'door') {
-          // give the door and the tile above the door some special directional rules
-          // so you can't enter doors from the top or exit them to the top
-          this.easystar.setDirectionalCondition(tile.x, tile.y, [easystarjs.BOTTOM]);
-          this.easystar.setDirectionalCondition(tile.x, tile.y-1, [easystarjs.TOP, easystarjs.LEFT, easystarjs.RIGHT]);
-        }
-      }
-      mapData.push(b)
-    }
-    this.easystar.setGrid(mapData)
-    let acceptableTiles = []
-    for (var i=0;i<10000;i++) { acceptableTiles.push(i) }
-    acceptableTiles = acceptableTiles.filter( function( i ) {
-      // For some reason we are offset by index 1 when we get the tile index. Compensating here.
-      return !map.layers[0].collideIndexes.includes( ""+(i-1) );
-    } );
-    this.easystar.setAcceptableTiles(acceptableTiles);
   }
 
   isCharacterAtTile(tile, ignoreCharacter) {
