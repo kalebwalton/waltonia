@@ -1,9 +1,11 @@
 import 'phaser';
 import Controller from './Controller'
 import Helper from './utils/Helper'
+import StoreManager from './store/'
+
 
 class Waltonia extends Phaser.Game {
-  constructor() {
+  constructor(initialState) {
     let config = {
       type: Phaser.WEB_GL,
       parent: 'content',
@@ -21,9 +23,14 @@ class Waltonia extends Phaser.Game {
       }
     }
     super(config)
+    this.storeManager = new StoreManager(this.onStoreLoad.bind(this), initialState)
 
+  }
+
+  onStoreLoad(store) {
+    this.store = store
     this.helper = new Helper()
-    this.controller = new Controller({sceneManager: this.scene, game: this})
+    this.controller = new Controller({sceneManager: this.scene, game: this, store: this.store})
     this.controller.changeLevel('test', 'over', 0)
   }
 

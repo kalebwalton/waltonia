@@ -1,3 +1,3 @@
 import Waltonia from './lib/Waltonia'
 
-let waltonia = new Waltonia();
+let waltonia = new Waltonia({});

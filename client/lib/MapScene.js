@@ -93,8 +93,7 @@ class MapScene extends Phaser.Scene {
 
   initMap() {
     this.map = this.make.tilemap({ key: this.getKey(), tileWidth: 20, tileHeight: 20 });
-    this.map.addTilesetImage(this.mapConfig.type);
-    this.map.createStaticLayer('map', tileset);
+    this.map.createStaticLayer('map', this.map.addTilesetImage(this.mapConfig.type));
   }
 
   initPlayer() {
@@ -115,7 +114,7 @@ class MapScene extends Phaser.Scene {
       // on each tile in the tilemap instead (probably better).
       // We clear this timeout in the follow method below.
       this.notFollowTimeout = setTimeout(() => {
-        this.controller.player.notFollow()
+        this.controller.players[this.controller.firstPlayerId].notFollow()
       }, 50)
     }, 500), this);
   }

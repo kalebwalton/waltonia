@@ -85,12 +85,20 @@ class Character extends Phaser.GameObjects.Sprite {
     this.highlight.setVisible(false)
   }
 
+
+
+  // ACTIONS
+
   follow(character) {
     this.updateState({following: character})
   }
 
   notFollow() {
     this.updateState({following: null})
+  }
+
+  moveTo(tile) {
+    this.updateState({tile})
   }
 
 
@@ -139,15 +147,6 @@ class Character extends Phaser.GameObjects.Sprite {
     }
   }
 
-  pathTo(fromTile, toTile, callback) {
-    let easystar = this.scene.easystar
-    easystar.findPath(fromTile.x, fromTile.y, toTile.x, toTile.y, callback);
-    easystar.calculate();
-  }
-
-  moveTo(tile) {
-    this.updateState({tile})
-  }
 
   handleMoveTo(toTile, callback) {
     var mp = this.movementPath

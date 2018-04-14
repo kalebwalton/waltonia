@@ -12,7 +12,7 @@ class Controller {
     this.sceneManager = config.sceneManager
     this.game = config.game
 
-    this.player = null
+    this.firstPlayerId = null
     this.players = {}
     this.mobs = {}
 
@@ -61,28 +61,6 @@ class Controller {
 
     // capture details about the player so we can recreate him
     // FIXME figure out a better way to do this
-    var playerId, playerTile, playerTileX, playerTileY
-    if (this.player) {
-      playerId = this.player.id
-      playerTile = this.getMapScene().movement.getTileAtObject(this.player)
-      playerTileX = playerTile.x
-      playerTileY = playerTile.y
-
-      this.player.destroy()
-      delete this.player
-    }
-    if (this.players) {
-      for (var id in this.players) {
-        this.players[id].destroy()
-        delete this.players[id]
-      }
-    }
-    if (this.mobs) {
-      for (var id in this.mobs) {
-        this.mobs[id].destroy()
-        delete this.mobs[id]
-      }
-    }
     if (this.getMapScene()) {
       this.sceneManager.stop(this.sceneName)
     }
@@ -101,7 +79,8 @@ class Controller {
     mapScene.on('create', () => {
       if (playerId) {
         var tile = mapScene.movement.getTileAt(playerTileX, playerTileY)
-        this.player = this.createFirstPlayer(mapScene, playerId, tile)
+        this.firstPlayerId = playerId
+        this.createFirstPlayer(mapScene, playerId, tile)
       }
     })
 
@@ -145,33 +124,25 @@ class Controller {
   onTick(state) {
     var scene = this.getMapScene()
     if (scene && scene.movement) {
-      if (state.player) {
-        // Handle new player creation
-        if (!this.player) {
-          var tile = this.getMapScene().movement.getTileAt(state.player.tile.x, state.player.tile.y)
-          this.player = this.createFirstPlayer(this.getMapScene(), state.player.id, state.player.name, tile)
-          this.getMapScene();
-        }
-
-        console.log("Tick Player", state.player.tile)
-
-        this.player.updateState({targetTile: state.player.tile})
-      }
-
-      if (state.players) {
-        for (var id in state.players) {
-          var player = state.players[id]
-          if ((this.player && id != this.player.id) && !this.players[id]) {
-            var tile = this.getMapScene().movement.getTileAt(player.tile.x, player.tile.y)
-            this.players[id] = this.createOtherPlayer(this.getMapScene(), player.id, player.name, tile);
-          }
-          if (this.players[id]) {
-            console.log("Tick Player 2", player.tile)
-            this.players[id].updateState({targetTile: player.tile})
+      if (state.client) {
+        this.firstPlayerId = state.client.playerId
+        if (state.players) {
+          for (var id in state.players) {
+            var statePlayer = state.players[id]
+            var player = this.players[id]
+            if (player) {
+              player.updateState({targetTile: statePlayer.tile})
+            } else {
+              var tile = this.getMapScene().movement.getTileAt(statePlayer.tile.x, statePlayer.tile.y)
+              if (statePlayer.id == this.firstPlayerId) {
+                this.players[id] = this.createFirstPlayer(this.getMapScene(), statePlayer.id, statePlayer.name, tile)
+              } else {
+                this.players[id] = this.createOtherPlayer(this.getMapScene(), statePlayer.id, statePlayer.name, tile);
+              }
+            }
           }
         }
       }
-
       // for (var mobId in data.mobs) {
       //   var mob = data.mobs[mobId]
       //   if (this.mobs[mob.id]) {
