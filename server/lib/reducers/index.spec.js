@@ -98,20 +98,20 @@ describe('Reducers and actions', () => {
       expect(state.clients[sid1].errors).to.not.be.empty
       expect(state.clients[sid1].errors[0]).to.equal(MOVE_INVALID_TILE)
     })
-    it('should create or update players movement queue on valid tile', () => {
+    it('should create or update players targetTile on valid tile', () => {
       //var oldState = {players:{'testname':{name:'testname', password:'testpass', targetTile: {x:1, y:1}}}, clients:{'testsocketid': {name: 'testname', errors: []}}}
       state = reducer(state, requestMoveToTargetTile(2, 2, sid1))
       var player = getPlayer(state, sid1)
       expect(player).to.not.be.undefined
-      var movement = state.movements.players[player.id]
-      expect(movement).to.not.be.undefined
-      expect(movement.x).to.equal(2)
-      expect(movement.y).to.equal(2)
+      var targetTile = state.players[player.id].targetTile
+      expect(targetTile).to.not.be.undefined
+      expect(targetTile.x).to.equal(2)
+      expect(targetTile.y).to.equal(2)
       state = reducer(state, requestMoveToTargetTile(3, 3, sid1))
-      movement = state.movements.players[player.id]
-      expect(movement).to.not.be.undefined
-      expect(movement.x).to.equal(3)
-      expect(movement.y).to.equal(3)
+      targetTile = state.players[player.id].targetTile
+      expect(targetTile).to.not.be.undefined
+      expect(targetTile.x).to.equal(3)
+      expect(targetTile.y).to.equal(3)
     })
   })
 

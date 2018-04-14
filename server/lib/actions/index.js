@@ -33,6 +33,11 @@ export const moveToTile = (x, y, socketId) => {
   return {type: MOVE_TO_TILE, x, y, socketId}
 }
 
+export const SET_MOVEMENT = "SET_MOVEMENT"
+export const setMovement = (path, socketId) => {
+  return {type: SET_MOVEMENT, path, socketId}
+}
+
 export const GAME_START = "GAME_START"
 export const gameStart = () => {
   return {type: GAME_START}

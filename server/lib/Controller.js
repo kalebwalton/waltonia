@@ -3,8 +3,8 @@ import babelify from 'express-babelify-middleware';
 import path from 'path';
 import http from 'http';
 import io_server from 'socket.io';
-import { newPlayer, clientErrorsSent, authenticate, requestMoveToTargetTile, disconnect, mapsRequest, tilesetsRequest, moveToTile} from './actions/'
-import { getPlayerMovements, getClientErrors, getClients, getClientTickState, getClientByPlayerId, getPlayerById, getMapMeta} from './selectors/'
+import { setMovement, newPlayer, clientErrorsSent, authenticate, requestMoveToTargetTile, disconnect, mapsRequest, tilesetsRequest, moveToTile} from './actions/'
+import { getPlayers, getClientErrors, getClients, getClientTickState, getClientByPlayerId, getPlayerById, getMapMeta} from './selectors/'
 
 
 /*
@@ -120,27 +120,42 @@ class Controller {
 
   // Could easily break this up to be on a per player basis, calculating each
   // players movements based on their movement speed.
+  // If player has a targetTile set that is newer than the age of the movementPath,
+  // then recalculate the movement path
   tickMovements() {
-    let start = Date.now()
-    let movements = getPlayerMovements(this.state)
-    for (let playerId in movements) {
+    let now = Date.now()
+    for (let playerId in getPlayers(this.state)) {
       //let playerId = playerIdRef
       let player = getPlayerById(this.state, playerId)
-      let movement = movements[playerId]
-      let mapMeta = getMapMeta(this.state, player.mapId)
-      if (mapMeta) {
-        mapMeta.pathfinder.calculate(player.tile.x, player.tile.y, movement.x, movement.y, (path) => {
-          if (path && path.length > 1) {
-            let client = getClientByPlayerId(this.state, playerId)
-            if (client) {
-              console.log("Dispatching for ", client.socketId, playerId)
-              this.dispatch(moveToTile(path[1].x, path[1].y, client.socketId))
-            } else {
-              // FIXME deal with missing clients
-              console.error("Could not find client for playerId "+playerId)
+      let client = getClientByPlayerId(this.state, playerId)
+      if (player && client && player.targetTile) {
+        var movementPath = null
+        if (!player.movement || (player.movement && player.targetTile.requestedAt > player.movement.requestedAt)) {
+          let mapMeta = getMapMeta(this.state, player.mapId)
+          if (mapMeta) {
+            mapMeta.pathfinder.calculate(player.tile.x, player.tile.y, player.targetTile.x, player.targetTile.y, (path) => {
+              movementPath = path
+              console.log("Updating movement path ", path, client.socketId, playerId)
+              this.dispatch(setMovement(path, client.socketId))
+            })
+          }
+        } else {
+          movementPath = player.movement.path
+        }
+        if (movementPath && movementPath.length > 1) {
+          // Find next tile in path and update player with it
+          // FIXME move this to a per player calculator, and move the above logic to tick()
+          let found = false
+          for (let pathItem of movementPath) {
+            if (found) {
+              console.log("Moving to tile ", pathItem, client.socketId, playerId)
+              this.dispatch(moveToTile(pathItem.x, pathItem.y, client.socketId))
+            }
+            if (pathItem.x == player.tile.x && pathItem.y == player.tile.y) {
+              found = true
             }
           }
-        })
+        }
       }
     }
     this.tickMovementsTimeout = setTimeout(this.tickMovements.bind(this), this.tickMovementsInterval)

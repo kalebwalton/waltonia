@@ -7,6 +7,7 @@ import {
   DISCONNECT,
   REQUEST_MOVE_TO_TARGET_TILE,
   MOVE_TO_TILE,
+  SET_MOVEMENT,
   GAME_START,
   MAPS_LOAD,
   TILESETS_LOAD
@@ -162,16 +163,7 @@ const playerInteractionReducer = (state = {}, action) => {
       // FIXME This is where we want to do some target tile validation
       var player = getPlayer(nstate, socketId)
       if (player) {
-        nstate = {
-          ...nstate,
-          movements: {
-            ...nstate.movements,
-            players: {
-              ...nstate.movements.players,
-              [player.id]: { x, y, requestedAt: Date.now() }
-            }
-          }
-        }
+        nstate = insertPlayer(nstate, { ...player, targetTile: {x,y, requestedAt: Date.now()} })
       }
       break
 
@@ -180,33 +172,26 @@ const playerInteractionReducer = (state = {}, action) => {
       var player = getPlayer(nstate, socketId)
       if (player) {
         console.log("Moving", player.name, {x,y})
+        let targetTile = player.targetTile && (player.targetTile.x == x && player.targetTile.y == y) ? undefined : player.targetTile
+        let movement = targetTile ? player.movement : undefined
+        // Clear targetTile and movement if they've reached their destination
         nstate = insertPlayer(nstate, {
           ...player,
-          tile: {x,y}
+          tile: {x,y},
+          targetTile,
+          movement
         })
       }
-      // Clear movement for the player if he reached his target tile
-      if (nstate.movements.players) {
-        var movement = nstate.movements.players[player.id]
-        if (movement) {
-          player = getPlayer(nstate, socketId) // Need an updated player with the latest x/y coords
-          if (player.tile.x == movement.x && player.tile.y == movement.y) {
-            // Done moving, remove from queue
-            var playerMovements = {...nstate.movements.players}
-            delete playerMovements[player.id]
-            nstate = {
-              ...nstate,
-              movements: {
-                ...nstate.movements,
-                players: {
-                  ...playerMovements
-                }
-              }
-            }
-          }
-        }
-      }
 
+      break
+
+    case SET_MOVEMENT:
+      var {path} = action
+      var player = getPlayer(nstate, socketId)
+      if (player) {
+        console.log("Setting movement path", player.name, path)
+        nstate = insertPlayer(nstate, {...player, movement: {path, requestedAt: Date.now()}})
+      }
       break
 
     case CLIENT_ERRORS_SENT:

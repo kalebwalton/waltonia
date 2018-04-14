@@ -12,7 +12,8 @@ describe('Waltonia', () => {
     waltonia = new Waltonia({}, mockState())
   })
   after(() => {
-    setTimeout(() => {waltonia.destroy()}, 1000)
+    console.log("DESTROYING");
+    waltonia.destroy()
   })
 
   it('should result in a store and controller after a couple seconds', () => {
@@ -21,7 +22,8 @@ describe('Waltonia', () => {
         expect(waltonia.store).to.not.be.undefined
         expect(waltonia.controller).to.not.be.undefined
         resolve()
-      }, 2000);
+        console.log("RESOVLED")
+      }, 1000);
     })
   }).timeout(5000)
 })
