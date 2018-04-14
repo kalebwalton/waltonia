@@ -37,7 +37,6 @@ export const hasClientErrors = (state, socketId) => {
 }
 export const getClientTickState = (state, socketId) => {
   var s = {
-    player: getPlayer(state, socketId),
     players: getPlayers(state)
   }
   return s

@@ -3,7 +3,7 @@ import StoreManager from './store/'
 import {AUTH_BAD_REQUEST, AUTH_PLAYER_DOES_NOT_EXIST} from './errors/'
 import {expect, assert} from 'chai'
 import {check} from './test/'
-import {pn1, pn2, ps1, ps2, em1, em2, sid1, sid2, mockState} from './reducers/mock'
+import {pid1, pid2, pn1, pn2, ps1, ps2, em1, em2, sid1, sid2, mockState} from './reducers/mock'
 import io from 'socket.io-client';
 import {gameStart} from './actions/'
 
@@ -43,8 +43,8 @@ describe('Controller', () => {
     it('should return an existing player when authenticate with a playername that does exist', (done) => {
       io_client.on('tick', (state) => {
         expect(state).to.not.be.undefined
-        expect(state).to.have.property('player')
-        expect(state.player).to.have.property('name', pn1)
+        expect(state).to.have.property('players')
+        expect(state.players[pid1]).to.have.property('name', pn1)
         done()
       })
       io_client.emit('authenticate', {playername: pn1, password: ps1})
@@ -61,7 +61,6 @@ describe('Controller', () => {
       io_client.on('tick', (state) => {
         expect(state).to.not.be.undefined
         expect(state).to.have.property('players')
-        expect(state).to.have.property('player')
         done()
       })
       io_client.emit('authenticate', {playername: pn1, password: ps1})
@@ -76,17 +75,22 @@ describe('Controller', () => {
           }, 50)
         });
       })
+      after(() => {
+        io_client.removeAllListeners('tick')
+        io_client.close()
+        controller.destroy()
+      })
 
       it('should tick with new tile shortly after requestMoveToTargetTile', (done) => {
         var attempt = 0
         var x=2,y=2
         io_client.on('tick', (state) => {
-          if (state.player.tile.x == x && state.player.tile.y == y) {
+          if (state.players[pid1].tile.x == x && state.players[pid1].tile.y == y) {
             done()
           }
           attempt++
           if (attempt >= 7) {
-            assert.fail(state.player.tile.x+","+state.player.tile.y,x+","+y, `Player tile x,y didn't equal ${x},${y} after ${attempt} ticks`)
+            assert.fail(state.players[pid1].tile.x+","+state.players[pid1].tile.y,x+","+y, `Player tile x,y didn't equal ${x},${y} after ${attempt} ticks`)
             done()
           }
         })
