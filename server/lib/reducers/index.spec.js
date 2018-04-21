@@ -5,7 +5,8 @@ import {
   CLIENT_ERRORS_SENT, clientErrorsSent,
   DISCONNECT, disconnect,
   REQUEST_MOVE_TO_TARGET_TILE, requestMoveToTargetTile,
-  MOVE_TO_TILE, moveToTile,
+  MOVE_ALONG_PATH, moveAlongPath,
+  SET_MOVEMENT, setMovement,
   MAPS_LOAD, mapsLoad, mapsRequest,
   TILESETS_LOAD, tilesetsLoad, tilesetsRequest
 } from '../actions/'
@@ -115,12 +116,23 @@ describe('Reducers and actions', () => {
     })
   })
 
-  describe('move to tile', () => {
+  describe('set movement and move along path', () => {
     it('should update player tile', () => {
-      state = reducer(state, moveToTile(5, 5, sid1))
+      state = reducer(state, setMovement([{x:1,y:1},{x:1,y:2}], sid1))
+      state = reducer(state, moveAlongPath(sid1))
       var player = getPlayer(state, sid1)
       expect(player).to.not.be.undefined
-      expect(player.tile).to.deep.equal({x:5,y:5})
+      expect(player.tile).to.deep.equal({x:1,y:2})
+    })
+    it('should finish moving', () => {
+      state = reducer(state, setMovement([{x:1,y:1},{x:1,y:2}], sid1))
+      state = reducer(state, moveAlongPath(sid1))
+      state = reducer(state, moveAlongPath(sid1))
+      var player = getPlayer(state, sid1)
+      expect(player).to.not.be.undefined
+      expect(player.tile).to.deep.equal({x:1,y:2})
+      expect(player.movement).to.be.undefined
+      expect(player.targetTile).to.be.undefined
     })
   })
 

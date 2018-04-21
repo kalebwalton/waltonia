@@ -94,6 +94,7 @@ describe('Authenticated Controller events', () => {
     var attempt = 0
     var x=2,y=2
     io_client.on('tick', (state) => {
+      console.log("Player movement", state.players[pid1].movement)
       if (state.players[pid1].tile.x == x && state.players[pid1].tile.y == y) {
         done()
       }

@@ -1,9 +1,10 @@
+var debug = require('debug')('controller');
 import express from 'express';
 import babelify from 'express-babelify-middleware';
 import path from 'path';
 import http from 'http';
 import io_server from 'socket.io';
-import { setMovement, newPlayer, clientErrorsSent, authenticate, requestMoveToTargetTile, disconnect, mapsRequest, tilesetsRequest, moveToTile} from './actions/'
+import { setMovement, newPlayer, clientErrorsSent, authenticate, requestMoveToTargetTile, disconnect, mapsRequest, tilesetsRequest, moveAlongPath} from './actions/'
 import { getPlayers, getClientErrors, getClients, getClientTickState, getClientByPlayerId, getPlayerById, getMapMeta} from './selectors/'
 
 
@@ -135,28 +136,18 @@ class Controller {
           if (mapMeta) {
             mapMeta.pathfinder.calculate(player.tile.x, player.tile.y, player.targetTile.x, player.targetTile.y, (path) => {
               movementPath = path
-              console.log("Updating movement path ", path, client.socketId, playerId)
+              debug("Updating movement path ", path, client.socketId, playerId)
               this.dispatch(setMovement(path, client.socketId))
             })
           }
         } else {
           movementPath = player.movement.path
         }
-        if (movementPath && movementPath.length > 1) {
+        if (movementPath && movementPath.length > 0) {
           // Find next tile in path and update player with it
           // FIXME move this to a per player calculator, and move the above logic to tick()
-          let found = false
-          for (let pathItem of movementPath) {
-            // FIXME use a 'pointer' instead of this brute force search. Probably instead of
-            // moveToTile do something like incrementPath... maybe... need to think through
-            if (found) {
-              console.log("Moving to tile ", pathItem, client.socketId, playerId)
-              this.dispatch(moveToTile(pathItem.x, pathItem.y, client.socketId))
-            }
-            if (pathItem.x == player.tile.x && pathItem.y == player.tile.y) {
-              found = true
-            }
-          }
+          debug("Incrementing path ", client.socketId, playerId)
+          this.dispatch(moveAlongPath(client.socketId))
         }
       }
     }
@@ -195,7 +186,7 @@ class Controller {
     if (!data) {
       data = {}
     }
-    console.log("Event: authenticate", socket.id, data)
+    debug("Event: authenticate", socket.id, data)
     this.dispatch(authenticate(data.playername, data.password, socket.id))
   }
 
@@ -209,7 +200,7 @@ class Controller {
   */
   onRequestMoveToTargetTile(e) {
     var {socket, data} = e
-    console.log("Event: requestMoveToTargetTile", socket.id, data)
+    debug("Event: requestMoveToTargetTile", socket.id, data)
     this.dispatch(requestMoveToTargetTile(data.x, data.y, socket.id))
   }
 
@@ -261,7 +252,7 @@ class Controller {
     this.app.use(express.static(path.join(__dirname, '../../public')));
     var port = process.env.PORT || 3000;
     server.listen(port, function () {
-      console.debug('Server listening at port %d', port);
+      debug('Server listening at port %d', port);
     });
     return server
   }

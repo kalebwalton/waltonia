@@ -28,9 +28,9 @@ export const requestMoveToTargetTile = (x, y, socketId) => {
   return {type: REQUEST_MOVE_TO_TARGET_TILE, x, y, socketId}
 }
 
-export const MOVE_TO_TILE = "MOVE_TO_TILE"
-export const moveToTile = (x, y, socketId) => {
-  return {type: MOVE_TO_TILE, x, y, socketId}
+export const MOVE_ALONG_PATH = "MOVE_ALONG_PATH"
+export const moveAlongPath = (socketId) => {
+  return {type: MOVE_ALONG_PATH, socketId}
 }
 
 export const SET_MOVEMENT = "SET_MOVEMENT"
@@ -73,7 +73,7 @@ export const mapOrTileSetRequest = (globPattern, loadFn) => {
       });
     }).then(
       maps => dispatch(loadFn(maps)),
-      error => console.log(error)
+      error => console.error(error)
     )
   }
 }

@@ -11,6 +11,7 @@ class Controller {
     this.socket = io(this.url.protocol+"//"+this.url.hostname+":3000");
     this.sceneManager = config.sceneManager
     this.game = config.game
+    this.store = config.store
 
     this.firstPlayerId = null
     this.players = {}
@@ -143,22 +144,6 @@ class Controller {
           }
         }
       }
-      // for (var mobId in data.mobs) {
-      //   var mob = data.mobs[mobId]
-      //   if (this.mobs[mob.id]) {
-      //     this.mobs[mob.id].updateState(mob)
-      //   } else {
-      //     if (this.getMapScene()) {
-      //       var tile = this.getMapScene().movement.getTileAt(mob.tile.x, mob.tile.y)
-      //       if (tile) {
-      //         this.mobs[mob.id] = this.createMob(mob.id, tile)
-      //       } else {
-      //         console.warn("Mob spawned on an invalid tile", this.mobs[mob.id])
-      //       }
-      //     }
-      //   }
-      // }
-
     }
   }
 

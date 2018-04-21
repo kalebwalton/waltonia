@@ -1,3 +1,4 @@
+var debug = require('debug')('reducers');
 import reduceReducers from 'reduce-reducers'
 import {
   NEW_PLAYER,
@@ -6,7 +7,7 @@ import {
   AUTHENTICATE,
   DISCONNECT,
   REQUEST_MOVE_TO_TARGET_TILE,
-  MOVE_TO_TILE,
+  MOVE_ALONG_PATH,
   SET_MOVEMENT,
   GAME_START,
   MAPS_LOAD,
@@ -148,6 +149,11 @@ const playerInteractionReducer = (state = {}, action) => {
           ...client,
           playerId: player.id
         })
+        // We update the player with a socketId as well so we know they're auth'd and connected
+        nstate = insertPlayer(nstate, {
+          ...player,
+          socketId
+        })
       } else {
         nstate = insertClientError(nstate, socketId, AUTH_PLAYER_DOES_NOT_EXIST)
       }
@@ -167,17 +173,31 @@ const playerInteractionReducer = (state = {}, action) => {
       }
       break
 
-    case MOVE_TO_TILE:
-      var {x,y} = action
+    case MOVE_ALONG_PATH:
       var player = getPlayer(nstate, socketId)
-      if (player) {
-        console.log("Moving", player.name, {x,y})
-        let targetTile = player.targetTile && (player.targetTile.x == x && player.targetTile.y == y) ? undefined : player.targetTile
-        let movement = targetTile ? player.movement : undefined
-        // Clear targetTile and movement if they've reached their destination
+      if (player && player.movement) {
+        let nextStep = player.movement.step + 1
+        let targetTile = player.targetTile
+        let movement = player.movement
+        let tile = player.tile
+
+        if (nextStep < movement.path.length) {
+          let {x,y} = movement.path[nextStep]
+          debug("Moving", player.name, nextStep, x, y)
+          tile = {x,y}
+          movement = {
+            ...player.movement,
+            step: nextStep
+          }
+        } else {
+          debug("Finished moving", player.name, nextStep)
+          // Clear targetTile and movement if they've reached their destination
+          targetTile = undefined
+          movement = undefined
+        }
         nstate = insertPlayer(nstate, {
           ...player,
-          tile: {x,y},
+          tile,
           targetTile,
           movement
         })
@@ -189,8 +209,8 @@ const playerInteractionReducer = (state = {}, action) => {
       var {path} = action
       var player = getPlayer(nstate, socketId)
       if (player) {
-        console.log("Setting movement path", player.name, path)
-        nstate = insertPlayer(nstate, {...player, movement: {path, requestedAt: Date.now()}})
+        debug("Setting movement path", player.name, path)
+        nstate = insertPlayer(nstate, {...player, movement: {path, step: 0, requestedAt: Date.now()}})
       }
       break
 
@@ -202,13 +222,26 @@ const playerInteractionReducer = (state = {}, action) => {
       break
 
     case DISCONNECT:
-      var nclients = {
-        ...nstate.clients
-      }
-      delete nclients[socketId]
-      nstate = {
-        ...nstate,
-        clients: nclients
+      // We update the player with a socketId as well so we know they're auth'd and connected
+      var client = getClient(nstate, socketId)
+      if (client) {
+        var player = getPlayer(nstate, client.playerId)
+        if (player) {
+          // We update the player with a socketId as well so we know they're auth'd and connected
+          nstate = insertPlayer(nstate, {
+            ...player,
+            socketId: undefined
+          })
+        }
+
+        var nclients = {
+          ...nstate.clients
+        }
+        delete nclients[socketId]
+        nstate = {
+          ...nstate,
+          clients: nclients
+        }
       }
 
     default:

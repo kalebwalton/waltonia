@@ -1,3 +1,5 @@
+var debug = require('debug')('waltonia');
+
 import Controller from './Controller'
 import StoreManager from './store/'
 import {gameStart} from './actions/'
